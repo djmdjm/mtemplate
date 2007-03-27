@@ -1,0 +1,10 @@
+This is a simple generic type library for C, loosely modelled on Python.
+The fundamental types supported are "None", arrays, dictionaries 
+(string-keyed lookups), strings and integers. Types may be nested inside
+multi-valued types; e.g. arrays may contain other arrays as an element, 
+dictionaries may contain dictionaries of arrays, etc. The library also
+supports iteration over arrays and dictionaries.
+
+Damien Miller <djm@mindrot.org> 2007-03-27
+
+$Id$

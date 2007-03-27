@@ -1,0 +1,67 @@
+convenience functions:
+  xdict_item_s(xdict, char *)
+  xdict_insert_s(xdict, char *, v)
+  xdict_replace_s(xdict, char *, v)
+  xdict_delete_s(xdict, char *, v)
+
+xdict_set_default
+
+arbitrary objects as dict keys (ints at least)
+
+prevent free of object while iterating over them
+prevent modification of object while iterating (or abort iter)
+
+xdict_len -> number of items in dict
+
+refcounts
+
+object ownership
+
+recursive iteration
+
+cycle protection (you can add an array to itself at present, etc.)
+
+recursive printing
+
+name syntax/resolution (e.g. "array[10].dictkey")
+
+meaningful error codes
+
+sparse arrays
+
+better underlying data structures for arrays and dicts
+
+string operations (search, concat, etc.)
+
+arrays are pretty much write-only now, fix this
+
+non-recursive (iterative) deallocation (depth-first?, maybe needs
+ownership ptrs)
+
+rethink casting - should all *_new function return xobject?
+
+serialise to/from string in canonical encoding
+
+deep copy
+
+array concatenation
+
+array slicing (iterator or copy?)
+
+dict update (insert one dict to another)
+
+"set" datatype
+
+simple namespace system:
+    ns = namespace_create();
+    namespace_set("blah[10].foo", "something")
+    namespace_set("bleh.xxx", "something else")
+    v = namespace_get_string("blah[10].foo");
+    nsi = namespace_iterate("blah");
+    o = namespace_iternext(blah);
+    /* o->key = 10 o->value = dict() */
+
+range iterator
+   xobject_getiter_range(0, 1000)
+
+$Id$
