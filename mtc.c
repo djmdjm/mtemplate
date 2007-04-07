@@ -16,7 +16,7 @@
 
 /* $Id$ */
 
-/* Simple template system processor */
+/* Simple xtemplate command line processor */
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -36,7 +36,8 @@
 static void
 usage(void)
 {
-	fprintf(stderr, "Usage: xtc [-h] [-D key=value] template-file\n");
+	fprintf(stderr,
+	    "Usage: xtc [-h] [-D key=value] [-o output-file] template-file\n");
 }
 
 static void
@@ -70,19 +71,24 @@ main(int argc, char **argv)
 	extern int optind;
 	int len, ch, tfd;
 	char *template, buf[8192];
+	const char *out_path = "-";
 	size_t tlen;
 	struct xtemplate *t;
 	struct xdict *namespace;
+	FILE *out;
 
 	if ((namespace = xdict_new()) == NULL)
 		errx(1, "xdict_new failed");
-	while ((ch = getopt(argc, argv, "hD:")) != -1) {
+	while ((ch = getopt(argc, argv, "hD:o:")) != -1) {
 		switch (ch) {
 		case 'h':
 			usage();
 			exit(0);
 		case 'D':
 			define(namespace, optarg);
+			break;
+		case 'o':
+			out_path = optarg;
 			break;
 		default:
 			warnx("Unrecognised command line option");
@@ -128,11 +134,16 @@ main(int argc, char **argv)
 
 	if ((t = xtemplate_parse(template, buf, sizeof(buf))) == NULL)
 		errx(1, "xtemplate_parse: %s", buf);
-	xtemplate_dump(t);
 
-	if (xtemplate_run(t, namespace, stdout /*XXX*/,
-	    buf, sizeof(buf)) == -1)
+	if (strcmp(out_path, "-") == 0)
+		out = stdout;
+	else if ((out = fopen(out_path, "w")) == NULL)
+		err(1, "fopen(\"%s\")", out_path);
+
+	if (xtemplate_run(t, namespace, out, buf, sizeof(buf)) == -1)
 		errx(1, "xtemplate_run: %s", buf);
+
+	fclose(out);
 
 	return 0;
 }

@@ -191,7 +191,7 @@ classify_node(const char *directive, size_t len, const char **end_p,
 	}
 
 	/* Check for [[ escape */
-	if (len == 2 && strncmp(directive, "[[", 2) == 0) {
+	if (len == 2 && strncmp(directive, "{{", 2) == 0) {
 		*end_p = directive;
 		*typep = NODE_TEXT;
 		return 0;
@@ -254,7 +254,7 @@ xtemplate_parse(const char *template, char *ebuf, size_t elen)
 	node = NULL;
 	for(p = o = 0, lnum = 1;;) {
 		/* Match newlines and directive starting sequence */
-		start_p = strpbrk(template + o + p, "\n[");
+		start_p = strpbrk(template + o + p, "\n{");
 
 		/* Append string at end of template */
 		if (start_p == NULL) {
@@ -275,7 +275,7 @@ xtemplate_parse(const char *template, char *ebuf, size_t elen)
 			continue;
 		}
 		/* Make sure we have a full opening sequence */
-		if (*(start_p + 1) != '[') {
+		if (*(start_p + 1) != '{') {
 			p = (start_p + 1) - (template + o);
 			continue;
 		}
@@ -291,11 +291,11 @@ xtemplate_parse(const char *template, char *ebuf, size_t elen)
 			TAILQ_INSERT_TAIL(activep, node, entry);
 		}
 	
-		/* skip opening of directive '[[' */
+		/* skip opening of directive '}}' */
 		start_p += 2;
 
 		/* Find end of directive */
-		if ((end_p = strstr(start_p, "]]")) == NULL) {
+		if ((end_p = strstr(start_p, "}}")) == NULL) {
 			format_err(lnum, ebuf, elen, "Unterminated directive");
 			return NULL;
 		}
@@ -383,47 +383,6 @@ node_done:
 	}
 
 	return ret;
-}
-
-static void
-xtemplate_dump_nodes(struct xtemplate_nodes *nodes, u_int depth)
-{
-	struct xtemplate_node *n;
-	char *pad = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"
-	            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
-	TAILQ_FOREACH(n, nodes, entry) {
-		printf("%.*sNode %p type %s %s%s%sline %u\n", depth, pad,
-		    n, node_type_ntop(n->type),
-		    n->type == NODE_TEXT ? "" : "\"",
-		    n->type == NODE_TEXT ? "" :
-		    (n->text == NULL ? "(null)" : n->text),
-		    n->type == NODE_TEXT ? "" : "\" ",
-		    n->lnum);
-
-		//printf("%.*s%s\n------------------\n", depth, pad,
-		//    n->text == NULL ? "(null)" : n->text);
-
-		switch (n->type) {
-		case NODE_DIRECTIVE_IF:
-			xtemplate_dump_nodes(&n->child_nodes, depth + 1);
-			printf("%.*s------ ELSE\n", depth, pad);
-			xtemplate_dump_nodes(&n->child_nodes_else, depth + 1);
-			printf("%.*s------ ENDIF\n", depth, pad);
-			break;
-		case NODE_DIRECTIVE_FOR:
-			xtemplate_dump_nodes(&n->child_nodes, depth + 1);
-			printf("%.*s------ ENDFOR\n", depth, pad);
-			break;
-		default:
-			break;
-		}
-	}
-}
-
-void
-xtemplate_dump(struct xtemplate *t)
-{
-	xtemplate_dump_nodes(&t->root.child_nodes, 0);
 }
 
 /* XXX move this to libxobject */

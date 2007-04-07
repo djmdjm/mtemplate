@@ -28,10 +28,23 @@
 
 struct xtemplate;
 
-struct xtemplate *xtemplate_parse(const char *template, char *ebuf, size_t elen);
+/*
+ * Parse the text 'template', returning a compiled representation suitable
+ * for later use by xtemplate_run().
+ *
+ * Returns a compiled template on success, or NULL if parsing.failed. On
+ * error, up to 'elen' bytes of error message will be written to 'ebuf'.
+ */
+struct xtemplate *xtemplate_parse(const char *template,
+    char *ebuf, size_t elen);
 
-void xtemplate_dump(struct xtemplate *t);
-
+/*
+ * Run the pre-compiled template 't', with an libxobject dictionary
+ * 'namespace'. Output will be written to 'out'.
+ *
+ * Returns a 0 on success, or -1 on failure. On failue, up to 'elen' bytes of
+ * error message will be written to 'ebuf'.
+ */
 int xtemplate_run(struct xtemplate *t, struct xdict *namespace, FILE *out,
     char *ebuf, size_t elen);
 
