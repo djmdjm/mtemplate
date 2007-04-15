@@ -259,7 +259,7 @@ xtemplate_parse(const char *template, char *ebuf, size_t elen)
 		/* Append string at end of template */
 		if (start_p == NULL) {
 			p = strlen(template + o);
-			if (p > 0)
+			if (p == 0)
 				break;
 			if ((node = alloc_node(template + o, p, NODE_TEXT,
 			    lnum, parent, ebuf, elen)) == NULL)
@@ -287,7 +287,7 @@ xtemplate_parse(const char *template, char *ebuf, size_t elen)
 			if ((node = alloc_node(template + o,
 			    start_p - (template + o), NODE_TEXT,
 			    lnum, parent, ebuf, elen)) == NULL)
-			return NULL;
+				return NULL;
 			TAILQ_INSERT_TAIL(activep, node, entry);
 		}
 	
@@ -401,8 +401,7 @@ xobject_as_boolean(struct xobject *o)
 		case TYPE_XARRAY:
 			return (xarray_len((struct xarray *)o) > 0);
 		case TYPE_XDICT:
-			/* XXX */
-			return 1;
+			return (xdict_len((struct xdict *)o) > 0);
 		default:
 			return 0;
 	}
@@ -466,7 +465,7 @@ do_loop(FILE *out, struct xtemplate_node *n, struct xiteritem *item,
 	}
 	r = xtemplate_run_nodes(&n->child_nodes, namespace, frame,
 	    out, ebuf, elen);
-	return 0;
+	return r;
 }
 
 /* XXX: libxobject should have a non-vis mode */
