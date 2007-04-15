@@ -22,7 +22,7 @@ main(int argc, char **argv)
 {
 	struct xnone *xnone_obj, *xnone_obj2;
 	struct xint *xint_obj;
-	struct xstring *xstring_obj;
+	struct xstring *xstring_obj, *k;
 	struct xarray *xarray_obj;
 	struct xdict *xdict_obj;
 	const struct xobject *o;
@@ -258,7 +258,7 @@ main(int argc, char **argv)
 	assert((o = xarray_pop(xarray_obj)) == NULL);
 	printf(".");
 
-	/* XXX leaks everywhere here!! */
+	xobject_free((struct xobject *)xarray_obj);
 
 	/* Case 27: store into dict */
 	xdict_obj = xdict_new();
@@ -274,13 +274,17 @@ main(int argc, char **argv)
 	    (struct xobject *)xint_new(-64)) == 0);
 	assert(xdict_insert(xdict_obj, xstring_new("f"),
 	    (struct xobject *)xint_new(42)) == 0);
-	/* XXX leaks key */
-	assert(xdict_insert(xdict_obj, xstring_new("a"),
+	assert(xdict_insert(xdict_obj, (k = xstring_new("a")),
 	    (o2 = (struct xobject *)xint_new(666))) == -1);
+	xobject_free((struct xobject *)k);
 	xobject_free(o2);
 	printf(".");
 
-	/* Case 27: retrieve from dict */
+	/* Case 28: xdict_len after insert */
+	assert(xdict_len(xdict_obj) == 6);
+	printf(".");
+
+	/* Case 29: retrieve from dict */
 	X_NONE_AT_DICT(xdict_obj, "a");
 	X_STRING_AT_DICT(xdict_obj, "b", "abc");
 	X_STRING_AT_DICT(xdict_obj, "c", "def");
@@ -290,7 +294,7 @@ main(int argc, char **argv)
 	X_NULL_AT_DICT(xdict_obj, "x");
 	printf(".");
 
-	/* Case 28: replace in dict */
+	/* Case 30: replace in dict */
 	assert(xdict_replace(xdict_obj, xstring_new("a"),
 	    (struct xobject *)xint_new(666)) == 0);
 	assert(xdict_replace(xdict_obj, xstring_new("x"),
@@ -299,24 +303,39 @@ main(int argc, char **argv)
 	X_NONE_AT_DICT(xdict_obj, "x");
 	printf(".");
 
-	/* Case 29: remove from dict */
-	/* XXX leaks keys */
-	assert((o2 = xdict_remove(xdict_obj, xstring_new("c"))) != NULL);
+	/* Case 31: xdict_len after replace */
+	assert(xdict_len(xdict_obj) == 7);
+	printf(".");
+
+	/* Case 32: remove from dict */
+	assert((o2 = xdict_remove(xdict_obj,
+	    (k = xstring_new("c")))) != NULL);
+	xobject_free((struct xobject *)k);
 	assert(xobject_type(o2) == TYPE_XSTRING);
 	assert(strcmp(xstring_ptr((struct xstring *)o2), "def") == 0);
-	assert((o2 = xdict_remove(xdict_obj, xstring_new("e"))) != NULL);
+	xobject_free(o2);
+	assert((o2 = xdict_remove(xdict_obj,
+	    (k = xstring_new("e")))) != NULL);
+	xobject_free((struct xobject *)k);
 	assert(xint_value((struct xint *)o2) == -64);
-	assert((o2 = xdict_remove(xdict_obj, xstring_new("z"))) == NULL);
+	xobject_free(o2);
+	assert((o2 = xdict_remove(xdict_obj, 
+	    (k = xstring_new("z")))) == NULL);
+	xobject_free((struct xobject *)k);
 	X_NULL_AT_DICT(xdict_obj, "c");
 	X_NULL_AT_DICT(xdict_obj, "e");
 	X_NULL_AT_DICT(xdict_obj, "z");
 	printf(".");
 
-	/* Case 30: free populated dict */
+	/* Case 33: xdict_len after remove */
+	assert(xdict_len(xdict_obj) == 5);
+	printf(".");
+
+	/* Case 34: free populated dict */
 	xobject_free((struct xobject *)xdict_obj);
 	printf(".");
 
-	/* Case 31: xobject_to_string */
+	/* Case 35: xobject_to_string */
 	xstring_obj = xstring_new("hello, world");
 	xint_obj = xint_new(42);
 	xnone_obj = xnone_new();
@@ -334,13 +353,13 @@ main(int argc, char **argv)
 	xobject_free((struct xobject *)xdict_obj);
 	printf(".");
 
-	/* Case 32: xobject_to_string with non-ASCII chars */
+	/* Case 36: xobject_to_string with non-ASCII chars */
 	xstring_obj = xstring_new2(bin, sizeof(bin));
 	T_XOTS(xstring_obj, "\\000\\001\\377hello\\363\\000");
 	xobject_free((struct xobject *)xstring_obj);
 	printf(".");
 
-	/* Case 32: array iterator */
+	/* Case 37: array iterator */
 	X_ARRAY_FILL(xarray_obj);
 	/* { "pqr", 4, 3, "klm", "abc", 1, None, 2, "def", "hij", None } */
 
@@ -360,11 +379,11 @@ main(int argc, char **argv)
 	X_NULL_ARRAY_ITER(it);
 	printf(".");
 
-	/* Case 33: free iterator after array traversal */
+	/* Case 38: free iterator after array traversal */
 	xiterator_free(it);
 	printf(".");
 
-	/* Case 34: free iterator midway through array traversal */
+	/* Case 39: free iterator midway through array traversal */
 	assert((it = xobject_getiter((struct xobject *)xarray_obj)) != NULL);
 	X_STRING_ARRAY_ITER(it, 0, "pqr");
 	X_INT_ARRAY_ITER(it, 1, 4);
@@ -376,7 +395,7 @@ main(int argc, char **argv)
 
 	xobject_free((struct xobject *)xarray_obj);
 
-	/* Case 35: dict iterator */
+	/* Case 40: dict iterator */
 	X_DICT_FILL(xdict_obj);
 	/* { "a" : None, "b" : "abc", c : "def", d : -64, e : 42 } */
 	/*
@@ -422,14 +441,33 @@ main(int argc, char **argv)
 	}
 	assert(seen == 0);
 
-	/* Case 36: free iterator after dict traversal */
+	/* Case 41: free iterator after dict traversal */
 	xiterator_free(it);
 	printf(".");
 
+	xobject_free((struct xobject *)xdict_obj);
+
+	/* Case 42: xarray_set and implicit filling */
+	assert((xarray_obj = xarray_new()) != NULL);
+	assert((xstring_obj = xstring_new2("happy", 3)) != NULL);
+	assert(xarray_set(xarray_obj, 5, (struct xobject *)xstring_obj) != -1);
+	assert((xstring_obj = xstring_new2("joyjoy", 2)) != NULL);
+	assert(xarray_set(xarray_obj, 3, (struct xobject *)xstring_obj) != -1);
+	assert((xstring_obj = xstring_new2("merry!", 5)) != NULL);
+	assert(xarray_set(xarray_obj, 3, (struct xobject *)xstring_obj) != -1);
+	assert(xarray_len(xarray_obj) == 6);
+	X_NONE_AT_ARRAY(xarray_obj, 0);
+	X_NONE_AT_ARRAY(xarray_obj, 1);
+	X_NONE_AT_ARRAY(xarray_obj, 2);
+	X_STRING_AT_ARRAY(xarray_obj, 3, "merry");
+	X_NONE_AT_ARRAY(xarray_obj, 4);
+	X_STRING_AT_ARRAY(xarray_obj, 5, "hap");
+	xobject_free((struct xobject *)xarray_obj);
+	printf(".");
 
 	/* XXX check that functions do not accept inappropriate objects */
-	/* XXX memory leaks */
-	/* XXX strings buf&len style */
+	/* XXX concurrent iterations */
+	/* XXX xdict_*_s function */
 
 	printf("\n");
 	return 0;

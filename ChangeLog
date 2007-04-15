@@ -1,5 +1,29 @@
+20070413
+ - (djm) Add xdict_len() function and regress tests for it
+ - (djm) Added some xarray_append_* helpers
+
+20070405
+ - (djm) Move convenience functions to their own file
+ - (djm) Implement xnamespace_set() + regress tests
+ - (djm) Implement xobject_deepcopy()
+
+20070404
+ - (djm) Added xarray_set() function
+ - (djm) Added more xdict convenience functions that take char* args
+
+20070402
+ - (djm) Added convenience variants of xdict_* functions that take a 
+   char* key instead of an struct xstring*
+ - (djm) Fixed a few memory leaks (mainly in regress tests)
+ - (djm) Moved the returned xiteritem into the parent iterator (previously
+   it was a static variable) so multiple concurrent iterations do not
+   clobber each other
+ - (djm) Introduce a namespace lookup function xnamespace_lookup()
+ - (djm) Remove a bunch of "const" keywords that made the API unnecessarily
+   difficult to use
+
 20070327
-  - (djm) Initial version (late night hacking session)
+ - (djm) Initial version (late night hacking session)
 
 $Id$
 

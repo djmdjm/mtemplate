@@ -33,7 +33,7 @@
 
 /* unbelievable that some systems lack this */
 #ifndef SIZE_T_MAX
-#define SIZE_T_MAX ULONG_MAX
+#define SIZE_T_MAX UINT_MAX
 #endif /* SIZE_T_MAX */
 
 /*
@@ -89,6 +89,7 @@ TAILQ_HEAD(xdict_entries, xdict_entry);
 /* Dictionary type */
 struct xdict {
 	enum xobject_type type; /* TYPE_XDICT */
+	size_t num_entries;
 	struct xdict_entries entries;
 };
 
@@ -96,6 +97,7 @@ struct xdict {
 struct xiterator {
 	struct xobject *object;
 	u_int started;
+	struct xiteritem iteritem;
 	size_t array_ndx;		/* Only valid for TYPE_XARRAY */
 	struct xobject *array_last_key;	/* Only valid for TYPE_XARRAY */
 	struct xdict_entry *dict_ptr;	/* Only valid for TYPE_XDICT */
@@ -302,17 +304,74 @@ xobject_to_string(const struct xobject *o, u_char *s, size_t len)
 	case TYPE_XSTRING:
 		return xstring_to_string((struct xstring *)o, s, len);
 	case TYPE_XINT:
-		/* XXX assumes snprintf return value is sane */
 		return snprintf(s, len, "%lld", ((struct xint *)o)->value);
 	case TYPE_XARRAY:
-		/* XXX assumes snprintf return value is sane */
 		return snprintf(s, len, "xarray(%p, %llu)", o,
 		    (unsigned long long)((struct xarray *)o)->nused);
 	case TYPE_XDICT:
-		/* XXX assumes snprintf return value is sane */
 		return snprintf(s, len, "xdict(%p)", o);
 	default:
 		return strlcpy(s, "Unsupported object type %d", o->type);
+	}
+}
+
+struct xobject *
+xobject_deepcopy(struct xobject *o)
+{
+	struct xstring *s = (struct xstring *)o;
+	struct xint *i = (struct xint *)o;
+	struct xarray *ra, *a = (struct xarray *)o;
+	struct xdict *rd;
+	struct xobject *k, *v;
+	struct xiterator *iter;
+	struct xiteritem *item;
+	size_t n;
+
+	switch (o->type) {
+	case TYPE_XNONE:
+		return (struct xobject *)xnone_new();
+	case TYPE_XSTRING:
+		return (struct xobject *)xstring_new2(xstring_ptr(s), xstring_len(s));
+	case TYPE_XINT:
+		return (struct xobject *)xint_new(xint_value(i));
+	case TYPE_XARRAY:
+		if ((ra = xarray_new()) == NULL)
+			return NULL;
+		for (n = 0; n < xarray_len(a); n++) {
+			if ((v = xobject_deepcopy(xarray_item(a, n))) == NULL) {
+				xobject_free((struct xobject *)ra);
+				return NULL;
+			}
+			xarray_set(ra, n, v);
+		}
+		return (struct xobject *)ra;
+	case TYPE_XDICT:
+		if ((rd = xdict_new()) == NULL)
+			return NULL;
+		if ((iter = xobject_getiter(o)) == NULL) {
+			xobject_free((struct xobject *)rd);
+			return NULL;
+		}
+		while ((item = xiterator_next(iter)) != NULL) {
+			if ((k = xobject_deepcopy(item->key)) == NULL) {
+ xdict_deepcopy_err:
+				xobject_free((struct xobject *)rd);
+				xiterator_free(iter);
+				return NULL;
+			}
+			if ((v = xobject_deepcopy(item->value)) == NULL) {
+				xobject_free((struct xobject *)k);
+				goto xdict_deepcopy_err;
+			}
+			if (xdict_insert(rd, (struct xstring *)k, v) != 0) {
+				xobject_free((struct xobject *)k);
+				xobject_free((struct xobject *)v);
+				goto xdict_deepcopy_err;
+			}
+		}
+		return (struct xobject *)rd;
+	default:
+		return NULL;
 	}
 }
 
@@ -391,6 +450,27 @@ xarray_append(struct xarray *array, struct xobject *object)
 	return 0;
 }
 
+int
+xarray_set(struct xarray *array, size_t ndx, struct xobject *object)
+{
+	size_t i;
+
+	if (array->type != TYPE_XARRAY)
+		return -1;
+	if (ndx >= XARRAY_MAX)
+		return -1;
+	if (xarray_resize(array, ndx + 1) == -1)
+		return -1;
+	/* Fill unallocated entries with None */
+	for (i = array->nused; i < ndx; i++)
+		array->entries[i] = (struct xobject *)xnone_new();
+	if (array->entries[ndx] != NULL)
+		xobject_free(array->entries[ndx]);
+	array->entries[ndx] = object;
+	array->nused = MAX(array->nused, ndx + 1);
+	return 0;
+}
+
 size_t
 xarray_len(struct xarray *array)
 {
@@ -399,7 +479,7 @@ xarray_len(struct xarray *array)
 	return array->nused;
 }
 
-const struct xobject *
+struct xobject *
 xarray_last(struct xarray *array)
 {
 	if (array->type != TYPE_XARRAY)
@@ -407,7 +487,7 @@ xarray_last(struct xarray *array)
 	return array->nused == 0 ? NULL : array->entries[array->nused - 1];
 }
 
-const struct xobject *
+struct xobject *
 xarray_first(struct xarray *array)
 {
 	if (array->type != TYPE_XARRAY)
@@ -449,7 +529,7 @@ xarray_pull(struct xarray *array)
 	return ret;
 }
 
-const struct xobject *
+struct xobject *
 xarray_item(struct xarray *array, size_t ndx)
 {
 	if (array->type != TYPE_XARRAY)
@@ -479,8 +559,8 @@ xstring_cmp(const struct xstring *a, const struct xstring *b)
 	return 0;
 }
 
-const struct xobject *
-xdict_item(struct xdict *dict, const struct xstring *key)
+struct xobject *
+xdict_item(const struct xdict *dict, const struct xstring *key)
 {
 	struct xdict_entry *e;
 
@@ -508,6 +588,7 @@ xdict_remove(struct xdict *dict, const struct xstring *key)
 			xobject_free((struct xobject *)e->key);
 			bzero(e, sizeof(*e));
 			free(e);
+			dict->num_entries--;
 			return ret;
 		}
 	}
@@ -517,13 +598,14 @@ xdict_remove(struct xdict *dict, const struct xstring *key)
 int
 xdict_delete(struct xdict *dict, const struct xstring *key)
 {
-	struct xobject *o = xdict_remove(dict, key);
+	struct xobject *o;
 
 	if (dict->type != TYPE_XDICT || key->type != TYPE_XSTRING)
 		return -1;
-	if (o == NULL)
+	if ((o = xdict_remove(dict, key)) == NULL)
 		return -1;
 	xobject_free(o);
+	dict->num_entries--;
 	return 0;
 }
 
@@ -543,6 +625,7 @@ xdict_insert(struct xdict *dict, struct xstring *key, struct xobject *value)
 	e->key = key;
 	e->value = value;
 	TAILQ_INSERT_TAIL(&dict->entries, e, entry);
+	dict->num_entries++;
 	return 0;
 }
 
@@ -561,6 +644,7 @@ xdict_replace(struct xdict *dict, struct xstring *key, struct xobject *value)
 		TAILQ_REMOVE(&dict->entries, e, entry);
 		xobject_free((struct xobject *)e->key);
 		xobject_free(e->value);
+		dict->num_entries--;
 	} else {
 		if ((e = calloc(1, sizeof(*e))) == NULL)
 			return -1;
@@ -568,7 +652,16 @@ xdict_replace(struct xdict *dict, struct xstring *key, struct xobject *value)
 	e->key = key;
 	e->value = value;
 	TAILQ_INSERT_TAIL(&dict->entries, e, entry);
+	dict->num_entries++;
 	return 0;
+}
+
+size_t
+xdict_len(const struct xdict *dict)
+{
+	if (dict->type != TYPE_XDICT)
+		return 0;
+	return dict->num_entries;
 }
 
 struct xiterator *
@@ -605,7 +698,6 @@ static struct xiteritem *
 xiterator_next_array(struct xiterator *iter)
 {
 	struct xarray *array = (struct xarray *)(iter->object);
-	static struct xiteritem *ret;
 	struct xobject *key;
 
 	if (!iter->started) {
@@ -615,25 +707,21 @@ xiterator_next_array(struct xiterator *iter)
 	}
 	if (iter->array_ndx >= array->nused)
 		return NULL;
-	if ((ret = calloc(1, sizeof(*ret))) == NULL)
+	bzero(&iter->iteritem, sizeof(iter->iteritem));
+	if ((key = (struct xobject *)xint_new(iter->array_ndx)) == NULL)
 		return NULL;
-	if ((key = (struct xobject *)xint_new(iter->array_ndx)) == NULL) {
-		free(ret);
-		return NULL;
-	}
 	if (iter->array_last_key != NULL)
 		xobject_free(iter->array_last_key);
 	iter->array_last_key = key;
-	ret->key = key;
-	ret->value = array->entries[iter->array_ndx++];
-	return ret;
+	iter->iteritem.key = key;
+	iter->iteritem.value = array->entries[iter->array_ndx++];
+	return &iter->iteritem;
 }
 
 static struct xiteritem *
 xiterator_next_dict(struct xiterator *iter)
 {
 	struct xdict *dict = (struct xdict *)(iter->object);
-	static struct xiteritem *ret;
 	
 	if (!iter->started) {
 		iter->dict_ptr = TAILQ_FIRST(&dict->entries);
@@ -641,16 +729,15 @@ xiterator_next_dict(struct xiterator *iter)
 	}
 	if (iter->dict_ptr == TAILQ_END(&dict->entries))
 		return NULL;
-	if ((ret = calloc(1, sizeof(*ret))) == NULL)
-		return NULL;
-	ret->key = (struct xobject *)iter->dict_ptr->key;
-	ret->value = iter->dict_ptr->value;
+	bzero(&iter->iteritem, sizeof(iter->iteritem));
+	iter->iteritem.key = (struct xobject *)iter->dict_ptr->key;
+	iter->iteritem.value = iter->dict_ptr->value;
 	iter->dict_ptr = TAILQ_NEXT(iter->dict_ptr, entry);
-	return ret;
+	return &iter->iteritem;
 }
 
 
-const struct xiteritem *
+struct xiteritem *
 xiterator_next(struct xiterator *iter)
 {
 	switch (iter->object->type) {
