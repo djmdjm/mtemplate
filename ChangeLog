@@ -1,6 +1,7 @@
-20070413
+20070415
  - (djm) Add xdict_len() function and regress tests for it
  - (djm) Added some xarray_append_* helpers
+ - (djm) Added xdict_replace_sn and xdict_insert_sn helpers
 
 20070405
  - (djm) Move convenience functions to their own file

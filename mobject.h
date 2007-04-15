@@ -288,6 +288,7 @@ int xdict_insert_ss(struct xdict *dict, const char *key, const char *value);
 int xdict_insert_si(struct xdict *dict, const char *key, int64_t value);
 int xdict_insert_sa(struct xdict *dict, const char *key);
 int xdict_insert_sd(struct xdict *dict, const char *key);
+int xdict_insert_sn(struct xdict *dict, const char *key);
 
 /*
  * Insert an item identified by "key" of value "value" into
@@ -309,6 +310,7 @@ int xdict_replace_ss(struct xdict *dict, const char *key, const char *value);
 int xdict_replace_si(struct xdict *dict, const char *key, int64_t value);
 int xdict_replace_sa(struct xdict *dict, const char *key);
 int xdict_replace_sd(struct xdict *dict, const char *key);
+int xdict_replace_sn(struct xdict *dict, const char *key);
 
 /*
  * Returns the number of items in a dictionary

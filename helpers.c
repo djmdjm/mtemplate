@@ -154,6 +154,19 @@ xdict_insert_sa(struct xdict *dict, const char *key)
 }
 
 int
+xdict_insert_sn(struct xdict *dict, const char *key)
+{
+	struct xnone *tmp;
+	int r;
+
+	if ((tmp = xnone_new()) == NULL)
+		return -1;
+	if ((r = xdict_insert_s(dict, key, (struct xobject *)tmp)) == -1)
+		xobject_free((struct xobject *)tmp);
+	return r;
+}
+
+int
 xdict_replace_s(struct xdict *dict, const char *key, struct xobject *value)
 {
 	struct xstring *tmp;
@@ -212,6 +225,19 @@ xdict_replace_sa(struct xdict *dict, const char *key)
 	int r;
 
 	if ((tmp = xarray_new()) == NULL)
+		return -1;
+	if ((r = xdict_replace_s(dict, key, (struct xobject *)tmp)) == -1)
+		xobject_free((struct xobject *)tmp);
+	return r;
+}
+
+int
+xdict_replace_sn(struct xdict *dict, const char *key)
+{
+	struct xnone *tmp;
+	int r;
+
+	if ((tmp = xnone_new()) == NULL)
 		return -1;
 	if ((r = xdict_replace_s(dict, key, (struct xobject *)tmp)) == -1)
 		xobject_free((struct xobject *)tmp);
