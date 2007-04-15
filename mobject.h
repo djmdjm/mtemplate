@@ -135,6 +135,13 @@ struct xobject *xobject_deepcopy(struct xobject *o);
 int64_t xint_value(const struct xint *v);
 
 /*
+ * Adds the value 'n' to the xint 'v'
+ *
+ * Returns 0 on success, -1 on failure.
+ */
+int xint_add(struct xint *v, int64_t n);
+
+/*
  * Returns the length of a string object "s"
  */
 size_t xstring_len(const struct xstring *s);

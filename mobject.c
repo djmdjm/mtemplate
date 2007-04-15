@@ -383,6 +383,15 @@ xint_value(const struct xint *v)
 	return v->value;
 }
 
+int
+xint_add(struct xint *v, int64_t n)
+{
+	if (v->type != TYPE_XINT)
+		return -1;
+	v->value += n;
+	return 0;
+}
+
 size_t
 xstring_len(const struct xstring *s)
 {
