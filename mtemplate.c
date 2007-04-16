@@ -626,7 +626,7 @@ out_stdio_cb(const char *buf, void *ctx)
 }
 
 int
-xtemplate_run(struct xtemplate *t, struct xdict *namespace, FILE *out,
+xtemplate_run_stdio(struct xtemplate *t, struct xdict *namespace, FILE *out,
     char *ebuf, size_t elen)
 {
 	return xtemplate_run_cb(t, namespace, ebuf, elen, out_stdio_cb, out);

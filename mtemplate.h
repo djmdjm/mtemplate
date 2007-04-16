@@ -45,8 +45,8 @@ struct xtemplate *xtemplate_parse(const char *template,
  * Returns a 0 on success, or -1 on failure. On failue, up to 'elen' bytes of
  * error message will be written to 'ebuf'.
  */
-int xtemplate_run(struct xtemplate *t, struct xdict *namespace, FILE *out,
-    char *ebuf, size_t elen);
+int xtemplate_run_stdio(struct xtemplate *t, struct xdict *namespace,
+    FILE *out, char *ebuf, size_t elen);
 
 /*
  * Run the pre-compiled template 't', with an libxobject dictionary

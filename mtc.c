@@ -140,7 +140,7 @@ main(int argc, char **argv)
 	else if ((out = fopen(out_path, "w")) == NULL)
 		err(1, "fopen(\"%s\")", out_path);
 
-	if (xtemplate_run(t, namespace, out, buf, sizeof(buf)) == -1)
+	if (xtemplate_run_stdio(t, namespace, out, buf, sizeof(buf)) == -1)
 		errx(1, "xtemplate_run: %s", buf);
 
 	fclose(out);
