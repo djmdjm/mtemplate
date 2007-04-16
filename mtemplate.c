@@ -346,6 +346,11 @@ xtemplate_parse(const char *template, char *ebuf, size_t elen)
 		/* Handle else, ascend on block close */
 		switch (type) {
 		case NODE_DIRECTIVE_ELSE:
+			if (parent->in_else) {
+				format_err(lnum, ebuf, elen,
+				    "\"else\" inside \"else\"");
+				return NULL;
+			}
 			parent->in_else = 1;
 			activep = &parent->child_nodes_else;
 			goto node_done;
@@ -389,6 +394,13 @@ xtemplate_parse(const char *template, char *ebuf, size_t elen)
 node_done:
 		p = 0;
 		o = 2 + end_p - template;
+	}
+
+	if (parent != &ret->root) {
+		format_err(lnum, ebuf, elen,
+		    "Unclosed \"%s\" block, begun at line %u",
+		    node_type_ntop(parent->type), parent->lnum);
+		return NULL;
 	}
 
 	return ret;
