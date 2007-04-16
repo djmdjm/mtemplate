@@ -48,5 +48,22 @@ struct xtemplate *xtemplate_parse(const char *template,
 int xtemplate_run(struct xtemplate *t, struct xdict *namespace, FILE *out,
     char *ebuf, size_t elen);
 
+/*
+ * Run the pre-compiled template 't', with an libxobject dictionary
+ * 'namespace'. Output will occur via the 'out_cb' callback, which will be
+ * called for each hunk of text that is generated. The 'out_ctx' argument is
+ * passed through to the callback for context.
+ *
+ * The first argument to the callback is a pointer to the nul-terminated
+ * string to be written, the second argument is the 'out_ctx'. On success,
+ * the callback must return 0. If the callback returns any other value,
+ * template generation will be terminated.
+ *
+ * Returns a 0 on success, or -1 on failure. On failue, up to 'elen' bytes of
+ * error message will be written to 'ebuf'.
+ */
+int
+xtemplate_run_cb(struct xtemplate *t, struct xdict *namespace, char *ebuf,
+    size_t elen, int (*out_cb)(const char *, void *), void *out_ctx);
 
 #endif /* _XTEMPLATE_H */

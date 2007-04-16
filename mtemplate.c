@@ -87,7 +87,8 @@ struct xtemplate {
 
 static int
 xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xdict *namespace,
-    struct xdict *local_namespace, FILE *out, char *ebuf, size_t elen);
+    struct xdict *local_namespace, char *ebuf, size_t elen,
+    int (*out_cb)(const char *, void *), void *out_ctx);
 
 static void
 format_err(int lnum, char *ebuf, size_t elen, const char *fmt, ...)
@@ -430,8 +431,9 @@ fetch_var(char *name, struct xdict *namespace,
 }
 
 static int
-do_loop(FILE *out, struct xtemplate_node *n, struct xiteritem *item,
-    struct xdict *namespace, struct xdict *frame, char *ebuf, size_t elen)
+do_loop(struct xtemplate_node *n, struct xiteritem *item,
+    struct xdict *namespace, struct xdict *frame, char *ebuf, size_t elen,
+    int (*out_cb)(const char *, void *), void *out_ctx)
 {
 	struct xobject *k, *v;
 	struct xdict *loopvar;
@@ -464,21 +466,21 @@ do_loop(FILE *out, struct xtemplate_node *n, struct xiteritem *item,
 		return -1;
 	}
 	r = xtemplate_run_nodes(&n->child_nodes, namespace, frame,
-	    out, ebuf, elen);
+	    ebuf, elen, out_cb, out_ctx);
 	return r;
 }
 
 /* XXX: libxobject should have a non-vis mode */
 #define RENDER_XO_ALLOC 256
 static int
-render_xobject(struct xobject *o, FILE *out, u_int lnum,
-    char *ebuf, size_t elen)
+render_xobject(struct xobject *o, u_int lnum, char *ebuf, size_t elen,
+    int (*out_cb)(const char *, void *), void *out_ctx)
 {
 	char *buf, *tmp;
 	size_t need;
 
 	if (xobject_type(o) == TYPE_XSTRING) {
-		if (fputs(xstring_ptr((struct xstring *)o), out) == EOF) {
+		if (out_cb(xstring_ptr((struct xstring *)o), out_ctx) != 0) {
 			format_err(lnum, ebuf, elen, "write error");
 			return -1;
 		}
@@ -500,7 +502,7 @@ render_xobject(struct xobject *o, FILE *out, u_int lnum,
 		buf = tmp;
 		xobject_to_string(o, buf, need);
 	}
-	if (fputs(buf, out) == EOF) {
+	if (out_cb(buf, out_ctx) != 0) {
 		format_err(lnum, ebuf, elen, "write error");
 		return -1;
 	}
@@ -510,7 +512,8 @@ render_xobject(struct xobject *o, FILE *out, u_int lnum,
 
 static int
 xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xdict *namespace,
-    struct xdict *local_namespace, FILE *out, char *ebuf, size_t elen)
+    struct xdict *local_namespace, char *ebuf, size_t elen,
+    int (*out_cb)(const char *, void *), void *out_ctx)
 {
 	struct xtemplate_node *n;
 	struct xobject *o;
@@ -522,7 +525,7 @@ xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xdict *namespace,
 	TAILQ_FOREACH(n, nodes, entry) {
 		switch (n->type) {
 		case NODE_TEXT:
-			if (fputs(n->text, out) == EOF) {
+			if (out_cb(n->text, out_ctx) == EOF) {
 				format_err(n->lnum, ebuf, elen, "write error");
 				return -1;
 			}
@@ -533,12 +536,12 @@ xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xdict *namespace,
 				return -1;
 			if (xobject_as_boolean(o)) {
 				r = xtemplate_run_nodes(&n->child_nodes,
-				    namespace, local_namespace, out,
-				    ebuf, elen);
+				    namespace, local_namespace, ebuf, elen,
+				    out_cb, out_ctx);
 			} else {
 				r = xtemplate_run_nodes(&n->child_nodes_else,
-				    namespace, local_namespace, out,
-				    ebuf, elen);
+				    namespace, local_namespace, ebuf, elen,
+				    out_cb, out_ctx);
 			}
 			if (r != 0)
 				return r;
@@ -570,8 +573,8 @@ xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xdict *namespace,
 				return -1;
 			}
 			while ((item = xiterator_next(iter)) != NULL) {
-				if (do_loop(out, n, item, namespace,
-				    frame, ebuf, elen) == -1)
+				if (do_loop(n, item, namespace, frame,
+				    ebuf, elen, out_cb, out_ctx) == -1)
 					return -1;
 			}
 			xiterator_free(iter);
@@ -582,7 +585,8 @@ xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xdict *namespace,
 			    n->lnum, "variable substitution",
 			    ebuf, elen)) == NULL)
 				return -1;
-			if (render_xobject(o, out, n->lnum, ebuf, elen) == -1)
+			if (render_xobject(o, n->lnum, ebuf, elen,
+			    out_cb, out_ctx) == -1)
 				return -1;
 			break;
 		default:
@@ -596,8 +600,8 @@ xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xdict *namespace,
 }
 
 int
-xtemplate_run(struct xtemplate *t, struct xdict *namespace, FILE *out,
-    char *ebuf, size_t elen)
+xtemplate_run_cb(struct xtemplate *t, struct xdict *namespace, char *ebuf,
+    size_t elen, int (*out_cb)(const char *, void *), void *out_ctx)
 {
 	struct xdict *local_namespace;
 	int r;
@@ -608,9 +612,22 @@ xtemplate_run(struct xtemplate *t, struct xdict *namespace, FILE *out,
 		return -1;
 	}
 	r = xtemplate_run_nodes(&t->root.child_nodes, namespace,
-	    local_namespace, out, ebuf, elen);
+	    local_namespace, ebuf, elen, out_cb, out_ctx);
 	xobject_free((struct xobject *)local_namespace);
 	return r;
 }
 
-/* XXX template_reassemble */
+static int
+out_stdio_cb(const char *buf, void *ctx)
+{
+	FILE *out = (FILE *)ctx;
+
+	return fputs(buf, out) == EOF ? -1 : 0;
+}
+
+int
+xtemplate_run(struct xtemplate *t, struct xdict *namespace, FILE *out,
+    char *ebuf, size_t elen)
+{
+	return xtemplate_run_cb(t, namespace, ebuf, elen, out_stdio_cb, out);
+}
