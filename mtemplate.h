@@ -50,6 +50,18 @@ int xtemplate_run_stdio(struct xtemplate *t, struct xdict *namespace,
 
 /*
  * Run the pre-compiled template 't', with an libxobject dictionary
+ * 'namespace'. Output will be returned in a string buffer pointed to by
+ * 'outp'. It is the caller's responsibility to deallocate this buffer.
+ *
+ * Returns a 0 on success, or -1 on failure. On failue, up to 'elen' bytes of
+ * error message will be written to 'ebuf'.
+ */
+int
+xtemplate_run_mbuf(struct xtemplate *t, struct xdict *namespace, char **outp,
+    char *ebuf, size_t elen);
+
+/*
+ * Run the pre-compiled template 't', with an libxobject dictionary
  * 'namespace'. Output will occur via the 'out_cb' callback, which will be
  * called for each hunk of text that is generated. The 'out_ctx' argument is
  * passed through to the callback for context.

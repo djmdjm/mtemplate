@@ -85,6 +85,14 @@ struct xtemplate {
 	struct xtemplate_node root;
 };
 
+/* Callback structure for memory buffer output */
+struct alloc_cb_ctx {
+	char *s;
+	size_t len;
+	size_t alloc;
+};
+#define ALLOC_MAX	(64 * 1024 * 1024)
+
 static int
 xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xdict *namespace,
     struct xdict *local_namespace, char *ebuf, size_t elen,
@@ -620,9 +628,7 @@ xtemplate_run_cb(struct xtemplate *t, struct xdict *namespace, char *ebuf,
 static int
 out_stdio_cb(const char *buf, void *ctx)
 {
-	FILE *out = (FILE *)ctx;
-
-	return fputs(buf, out) == EOF ? -1 : 0;
+	return fputs(buf, (FILE *)ctx) == EOF ? -1 : 0;
 }
 
 int
@@ -630,4 +636,53 @@ xtemplate_run_stdio(struct xtemplate *t, struct xdict *namespace, FILE *out,
     char *ebuf, size_t elen)
 {
 	return xtemplate_run_cb(t, namespace, ebuf, elen, out_stdio_cb, out);
+}
+
+static int
+out_alloc_cb(const char *buf, void *_ctx)
+{
+	struct alloc_cb_ctx *ctx = (struct alloc_cb_ctx *)_ctx;
+	size_t addlen = strlen(buf);
+	char *tmp;
+
+	if (addlen == 0)
+		return 0;
+	if (addlen >= ALLOC_MAX || ctx->len + addlen >= ALLOC_MAX)
+		goto out_alloc_cb_err;
+	if (ctx->len + addlen + 1 > ctx->alloc) {
+		if (ctx->alloc == 0)
+			ctx->alloc = MAX(addlen + 1, 256);
+		else {
+			ctx->alloc = MIN((ctx->alloc * 2), ALLOC_MAX);
+			if (ctx->alloc < addlen + 1)
+				ctx->alloc = addlen + 1;
+		}
+		if ((tmp = realloc(ctx->s, ctx->alloc)) == NULL)
+			goto out_alloc_cb_err;
+		ctx->s = tmp;
+	}
+	memcpy(ctx->s + ctx->len, buf, addlen + 1);
+	ctx->len += addlen;
+	return 0;
+	
+ out_alloc_cb_err:
+	if (ctx->s)
+		free(ctx->s);
+	ctx->s = NULL;
+	ctx->alloc = ctx->len = 0;
+	return -1;
+}
+
+int
+xtemplate_run_mbuf(struct xtemplate *t, struct xdict *namespace, char **outp,
+    char *ebuf, size_t elen)
+{
+	struct alloc_cb_ctx ctx = { NULL, 0, 0 };
+	int r;
+
+	*outp = NULL;
+	r = xtemplate_run_cb(t, namespace, ebuf, elen, out_alloc_cb, &ctx);
+	if (r == 0)
+		*outp = ctx.s;
+	return r;
 }
