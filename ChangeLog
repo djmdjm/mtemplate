@@ -1,3 +1,7 @@
+20070417
+ - (djm) Remove horrid casting: all public functions now work on struct
+   xobject * alone, the other types are still used internally.
+
 20070415
  - (djm) Add xdict_len() function and regress tests for it
  - (djm) Added some xarray_append_* helpers

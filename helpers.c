@@ -24,7 +24,7 @@
 /* XXX: this is all mechanical, move most of it to #defines */
 
 int
-xarray_append_s(struct xarray *array, const char *v)
+xarray_append_s(struct xobject *array, const char *v)
 {
 	struct xobject *tmp;
 	int r;
@@ -37,7 +37,7 @@ xarray_append_s(struct xarray *array, const char *v)
 }
 
 int
-xarray_append_i(struct xarray *array, int64_t v)
+xarray_append_i(struct xobject *array, int64_t v)
 {
 	struct xobject *tmp;
 	int r;
@@ -50,9 +50,9 @@ xarray_append_i(struct xarray *array, int64_t v)
 }
 
 struct xobject *
-xdict_item_s(const struct xdict *dict, const char *key)
+xdict_item_s(const struct xobject *dict, const char *key)
 {
-	struct xstring *tmp;
+	struct xobject *tmp;
 	struct xobject *r;
 
 	if ((tmp = xstring_new(key)) == NULL)
@@ -63,9 +63,9 @@ xdict_item_s(const struct xdict *dict, const char *key)
 }
 
 struct xobject *
-xdict_remove_s(struct xdict *dict, const char *key)
+xdict_remove_s(struct xobject *dict, const char *key)
 {
-	struct xstring *tmp;
+	struct xobject *tmp;
 	struct xobject *r;
 
 	if ((tmp = xstring_new(key)) == NULL)
@@ -76,9 +76,9 @@ xdict_remove_s(struct xdict *dict, const char *key)
 }
 
 int
-xdict_delete_s(struct xdict *dict, const char *key)
+xdict_delete_s(struct xobject *dict, const char *key)
 {
-	struct xstring *tmp;
+	struct xobject *tmp;
 	int r;
 
 	if ((tmp = xstring_new(key)) == NULL)
@@ -89,9 +89,9 @@ xdict_delete_s(struct xdict *dict, const char *key)
 }
 
 int
-xdict_insert_s(struct xdict *dict, const char *key, struct xobject *value)
+xdict_insert_s(struct xobject *dict, const char *key, struct xobject *value)
 {
-	struct xstring *tmp;
+	struct xobject *tmp;
 	int r;
 
 	if ((tmp = xstring_new(key)) == NULL)
@@ -102,9 +102,9 @@ xdict_insert_s(struct xdict *dict, const char *key, struct xobject *value)
 }
 
 int
-xdict_insert_ss(struct xdict *dict, const char *key, const char *value)
+xdict_insert_ss(struct xobject *dict, const char *key, const char *value)
 {
-	struct xstring *tmp;
+	struct xobject *tmp;
 	int r;
 
 	if ((tmp = xstring_new(value)) == NULL)
@@ -115,9 +115,9 @@ xdict_insert_ss(struct xdict *dict, const char *key, const char *value)
 }
 
 int 
-xdict_insert_si(struct xdict *dict, const char *key, int64_t value)
+xdict_insert_si(struct xobject *dict, const char *key, int64_t value)
 {
-	struct xint *tmp;
+	struct xobject *tmp;
 	int r;
 
 	if ((tmp = xint_new(value)) == NULL)
@@ -128,9 +128,9 @@ xdict_insert_si(struct xdict *dict, const char *key, int64_t value)
 }
 
 int
-xdict_insert_sd(struct xdict *dict, const char *key)
+xdict_insert_sd(struct xobject *dict, const char *key)
 {
-	struct xdict *tmp;
+	struct xobject *tmp;
 	int r;
 
 	if ((tmp = xdict_new()) == NULL)
@@ -141,9 +141,9 @@ xdict_insert_sd(struct xdict *dict, const char *key)
 }
 
 int
-xdict_insert_sa(struct xdict *dict, const char *key)
+xdict_insert_sa(struct xobject *dict, const char *key)
 {
-	struct xarray *tmp;
+	struct xobject *tmp;
 	int r;
 
 	if ((tmp = xarray_new()) == NULL)
@@ -154,9 +154,9 @@ xdict_insert_sa(struct xdict *dict, const char *key)
 }
 
 int
-xdict_insert_sn(struct xdict *dict, const char *key)
+xdict_insert_sn(struct xobject *dict, const char *key)
 {
-	struct xnone *tmp;
+	struct xobject *tmp;
 	int r;
 
 	if ((tmp = xnone_new()) == NULL)
@@ -167,9 +167,9 @@ xdict_insert_sn(struct xdict *dict, const char *key)
 }
 
 int
-xdict_replace_s(struct xdict *dict, const char *key, struct xobject *value)
+xdict_replace_s(struct xobject *dict, const char *key, struct xobject *value)
 {
-	struct xstring *tmp;
+	struct xobject *tmp;
 	int r;
 
 	if ((tmp = xstring_new(key)) == NULL)
@@ -180,9 +180,9 @@ xdict_replace_s(struct xdict *dict, const char *key, struct xobject *value)
 }
 
 int
-xdict_replace_ss(struct xdict *dict, const char *key, const char *value)
+xdict_replace_ss(struct xobject *dict, const char *key, const char *value)
 {
-	struct xstring *tmp;
+	struct xobject *tmp;
 	int r;
 
 	if ((tmp = xstring_new(value)) == NULL)
@@ -193,9 +193,9 @@ xdict_replace_ss(struct xdict *dict, const char *key, const char *value)
 }
 
 int
-xdict_replace_si(struct xdict *dict, const char *key, int64_t value)
+xdict_replace_si(struct xobject *dict, const char *key, int64_t value)
 {
-	struct xint *tmp;
+	struct xobject *tmp;
 	int r;
 
 	if ((tmp = xint_new(value)) == NULL)
@@ -206,9 +206,9 @@ xdict_replace_si(struct xdict *dict, const char *key, int64_t value)
 }
 
 int
-xdict_replace_sd(struct xdict *dict, const char *key)
+xdict_replace_sd(struct xobject *dict, const char *key)
 {
-	struct xdict *tmp;
+	struct xobject *tmp;
 	int r;
 
 	if ((tmp = xdict_new()) == NULL)
@@ -219,9 +219,9 @@ xdict_replace_sd(struct xdict *dict, const char *key)
 }
 
 int
-xdict_replace_sa(struct xdict *dict, const char *key)
+xdict_replace_sa(struct xobject *dict, const char *key)
 {
-	struct xarray *tmp;
+	struct xobject *tmp;
 	int r;
 
 	if ((tmp = xarray_new()) == NULL)
@@ -232,9 +232,9 @@ xdict_replace_sa(struct xdict *dict, const char *key)
 }
 
 int
-xdict_replace_sn(struct xdict *dict, const char *key)
+xdict_replace_sn(struct xobject *dict, const char *key)
 {
-	struct xnone *tmp;
+	struct xobject *tmp;
 	int r;
 
 	if ((tmp = xnone_new()) == NULL)

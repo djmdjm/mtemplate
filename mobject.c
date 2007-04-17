@@ -79,7 +79,7 @@ struct xarray {
 
 /* Dictionary entry (not user visible) */
 struct xdict_entry {
-	struct xstring *key;
+	struct xobject *key;
 	struct xobject *value;
 	TAILQ_ENTRY(xdict_entry) entry;
 };
@@ -106,20 +106,20 @@ struct xiterator {
 /* Single instance of xnone */
 static struct xnone *xnone_singleton = NULL;
 
-struct xnone *
+struct xobject *
 xnone_new(void)
 {
 	/* Keep a single instance of xnone */
 	/* XXX: memprotect it */
 	if (xnone_singleton != NULL)
-		return xnone_singleton;
+		return (struct xobject *)xnone_singleton;
 	if ((xnone_singleton = calloc(1, sizeof(*xnone_singleton))) == NULL)
 		return NULL;
 	xnone_singleton->type = TYPE_XNONE;
-	return xnone_singleton;
+	return (struct xobject *)xnone_singleton;
 }
 
-struct xint *
+struct xobject *
 xint_new(int64_t v)
 {
 	struct xint *ret;
@@ -128,10 +128,10 @@ xint_new(int64_t v)
 		return NULL;
 	ret->type = TYPE_XINT;
 	ret->value = v;
-	return ret;
+	return (struct xobject *)ret;
 }
 
-struct xstring *
+struct xobject *
 xstring_new2(const u_char *value, size_t len)
 {
 	struct xstring *ret;
@@ -152,16 +152,16 @@ xstring_new2(const u_char *value, size_t len)
 	memcpy(ret->value, value, len);
 	ret->value[len] = '\0';
 	ret->len = len;
-	return ret;
+	return (struct xobject *)ret;
 }
 
-struct xstring *
+struct xobject *
 xstring_new(const u_char *value)
 {
-	return xstring_new2(value, strlen(value));
+	return (struct xobject *)xstring_new2(value, strlen(value));
 }
 
-struct xarray *
+struct xobject *
 xarray_new(void)
 {
 	struct xarray *ret;
@@ -170,10 +170,10 @@ xarray_new(void)
 		return NULL;
 	ret->type = TYPE_XARRAY;
 	ret->entries = 0;
-	return ret;
+	return (struct xobject *)ret;
 }
 
-struct xdict *
+struct xobject *
 xdict_new(void)
 {
 	struct xdict *ret;
@@ -182,7 +182,7 @@ xdict_new(void)
 		return NULL;
 	ret->type = TYPE_XDICT;
 	TAILQ_INIT(&ret->entries);
-	return ret;
+	return (struct xobject *)ret;
 }
 
 enum xobject_type
@@ -240,7 +240,7 @@ xdict_free(struct xdict *o)
 
 	while ((oe = TAILQ_FIRST(&o->entries)) != NULL) {
 		TAILQ_REMOVE(&o->entries, oe, entry);
-		xobject_free((struct xobject *)oe->key);
+		xobject_free(oe->key);
 		xobject_free(oe->value);
 		bzero(oe, sizeof(*oe));
 		free(oe);
@@ -318,10 +318,7 @@ xobject_to_string(const struct xobject *o, u_char *s, size_t len)
 struct xobject *
 xobject_deepcopy(struct xobject *o)
 {
-	struct xstring *s = (struct xstring *)o;
-	struct xint *i = (struct xint *)o;
-	struct xarray *ra, *a = (struct xarray *)o;
-	struct xdict *rd;
+	struct xobject *new_obj;
 	struct xobject *k, *v;
 	struct xiterator *iter;
 	struct xiteritem *item;
@@ -329,63 +326,67 @@ xobject_deepcopy(struct xobject *o)
 
 	switch (o->type) {
 	case TYPE_XNONE:
-		return (struct xobject *)xnone_new();
+		return xnone_new();
 	case TYPE_XSTRING:
-		return (struct xobject *)xstring_new2(xstring_ptr(s), xstring_len(s));
+		return xstring_new2(xstring_ptr(o), xstring_len(o));
 	case TYPE_XINT:
-		return (struct xobject *)xint_new(xint_value(i));
+		return xint_new(xint_value(o));
 	case TYPE_XARRAY:
-		if ((ra = xarray_new()) == NULL)
+		if ((new_obj = xarray_new()) == NULL)
 			return NULL;
-		for (n = 0; n < xarray_len(a); n++) {
-			if ((v = xobject_deepcopy(xarray_item(a, n))) == NULL) {
-				xobject_free((struct xobject *)ra);
+		for (n = 0; n < xarray_len(o); n++) {
+			if ((v = xobject_deepcopy(xarray_item(o, n))) == NULL) {
+				xobject_free(new_obj);
 				return NULL;
 			}
-			xarray_set(ra, n, v);
+			xarray_set(new_obj, n, v);
 		}
-		return (struct xobject *)ra;
+		return new_obj;
 	case TYPE_XDICT:
-		if ((rd = xdict_new()) == NULL)
+		if ((new_obj = xdict_new()) == NULL)
 			return NULL;
 		if ((iter = xobject_getiter(o)) == NULL) {
-			xobject_free((struct xobject *)rd);
+			xobject_free(new_obj);
 			return NULL;
 		}
 		while ((item = xiterator_next(iter)) != NULL) {
 			if ((k = xobject_deepcopy(item->key)) == NULL) {
  xdict_deepcopy_err:
-				xobject_free((struct xobject *)rd);
+				xobject_free(new_obj);
 				xiterator_free(iter);
 				return NULL;
 			}
 			if ((v = xobject_deepcopy(item->value)) == NULL) {
-				xobject_free((struct xobject *)k);
+				xobject_free(k);
 				goto xdict_deepcopy_err;
 			}
-			if (xdict_insert(rd, (struct xstring *)k, v) != 0) {
-				xobject_free((struct xobject *)k);
-				xobject_free((struct xobject *)v);
+			if (xdict_insert(new_obj, k, v) != 0) {
+				xobject_free(k);
+				xobject_free(v);
 				goto xdict_deepcopy_err;
 			}
 		}
-		return (struct xobject *)rd;
+		return new_obj;
 	default:
 		return NULL;
 	}
 }
 
 int64_t
-xint_value(const struct xint *v)
+xint_value(const struct xobject *_v)
 {
+	struct xint *v = (struct xint *)_v;
+
 	if (v->type != TYPE_XINT)
 		return 0;
 	return v->value;
 }
 
 int
-xint_add(struct xint *v, int64_t n)
+xint_add(struct xobject *_v, int64_t n)
 {
+	struct xint *v = (struct xint *)_v;
+
 	if (v->type != TYPE_XINT)
 		return -1;
 	v->value += n;
@@ -393,16 +394,20 @@ xint_add(struct xint *v, int64_t n)
 }
 
 size_t
-xstring_len(const struct xstring *s)
+xstring_len(const struct xobject *_s)
 {
+	struct xstring *s = (struct xstring *)_s;
+
 	if (s->type != TYPE_XSTRING)
 		return 0;
 	return s->len;
 }
 
 const u_char *
-xstring_ptr(const struct xstring *s)
+xstring_ptr(const struct xobject *_s)
 {
+	struct xstring *s = (struct xstring *)_s;
+
 	if (s->type != TYPE_XSTRING)
 		return NULL;
 	return s->value;
@@ -435,8 +440,10 @@ xarray_resize(struct xarray *array, size_t want)
 }
 
 int
-xarray_prepend(struct xarray *array, struct xobject *object)
+xarray_prepend(struct xobject *_array, struct xobject *object)
 {
+	struct xarray *array = (struct xarray *)_array;
+
 	if (array->type != TYPE_XARRAY)
 		return -1;
 	if (xarray_resize(array, array->nused + 1) == -1)
@@ -449,8 +456,10 @@ xarray_prepend(struct xarray *array, struct xobject *object)
 }
 
 int
-xarray_append(struct xarray *array, struct xobject *object)
+xarray_append(struct xobject *_array, struct xobject *object)
 {
+	struct xarray *array = (struct xarray *)_array;
+
 	if (array->type != TYPE_XARRAY)
 		return -1;
 	if (xarray_resize(array, array->nused + 1) == -1)
@@ -460,8 +469,9 @@ xarray_append(struct xarray *array, struct xobject *object)
 }
 
 int
-xarray_set(struct xarray *array, size_t ndx, struct xobject *object)
+xarray_set(struct xobject *_array, size_t ndx, struct xobject *object)
 {
+	struct xarray *array = (struct xarray *)_array;
 	size_t i;
 
 	if (array->type != TYPE_XARRAY)
@@ -481,32 +491,39 @@ xarray_set(struct xarray *array, size_t ndx, struct xobject *object)
 }
 
 size_t
-xarray_len(struct xarray *array)
+xarray_len(struct xobject *_array)
 {
+	struct xarray *array = (struct xarray *)_array;
+
 	if (array->type != TYPE_XARRAY)
 		return 0;
 	return array->nused;
 }
 
 struct xobject *
-xarray_last(struct xarray *array)
+xarray_last(struct xobject *_array)
 {
+	struct xarray *array = (struct xarray *)_array;
+
 	if (array->type != TYPE_XARRAY)
 		return NULL;
 	return array->nused == 0 ? NULL : array->entries[array->nused - 1];
 }
 
 struct xobject *
-xarray_first(struct xarray *array)
+xarray_first(struct xobject *_array)
 {
+	struct xarray *array = (struct xarray *)_array;
+
 	if (array->type != TYPE_XARRAY)
 		return NULL;
 	return array->nused == 0 ? NULL : array->entries[0];
 }
 
 struct xobject *
-xarray_pop(struct xarray *array)
+xarray_pop(struct xobject *_array)
 {
+	struct xarray *array = (struct xarray *)_array;
 	struct xobject *ret;
 
 	if (array->type != TYPE_XARRAY)
@@ -519,8 +536,9 @@ xarray_pop(struct xarray *array)
 }
 
 struct xobject *
-xarray_pull(struct xarray *array)
+xarray_pull(struct xobject *_array)
 {
+	struct xarray *array = (struct xarray *)_array;
 	struct xobject *ret;
 
 	if (array->type != TYPE_XARRAY)
@@ -539,8 +557,10 @@ xarray_pull(struct xarray *array)
 }
 
 struct xobject *
-xarray_item(struct xarray *array, size_t ndx)
+xarray_item(struct xobject *_array, size_t ndx)
 {
+	struct xarray *array = (struct xarray *)_array;
+
 	if (array->type != TYPE_XARRAY)
 		return NULL;
 	if (ndx >= array->nused)
@@ -549,8 +569,10 @@ xarray_item(struct xarray *array, size_t ndx)
 }
 
 static int
-xstring_cmp(const struct xstring *a, const struct xstring *b)
+xstring_cmp(const struct xobject *_a, const struct xobject *_b)
 {
+	struct xstring *a = (struct xstring *)_a;
+	struct xstring *b = (struct xstring *)_b;
 	int r;
 
 	if (a->len == 0 && b->len == 0)
@@ -569,8 +591,9 @@ xstring_cmp(const struct xstring *a, const struct xstring *b)
 }
 
 struct xobject *
-xdict_item(const struct xdict *dict, const struct xstring *key)
+xdict_item(const struct xobject *_dict, const struct xobject *key)
 {
+	struct xdict *dict = (struct xdict *)_dict;
 	struct xdict_entry *e;
 
 	if (dict->type != TYPE_XDICT || key->type != TYPE_XSTRING)
@@ -583,8 +606,9 @@ xdict_item(const struct xdict *dict, const struct xstring *key)
 }
 
 struct xobject *
-xdict_remove(struct xdict *dict, const struct xstring *key)
+xdict_remove(struct xobject *_dict, const struct xobject *key)
 {
+	struct xdict *dict = (struct xdict *)_dict;
 	struct xdict_entry *e;
 	struct xobject *ret;
 
@@ -605,13 +629,14 @@ xdict_remove(struct xdict *dict, const struct xstring *key)
 }
 
 int
-xdict_delete(struct xdict *dict, const struct xstring *key)
+xdict_delete(struct xobject *_dict, const struct xobject *key)
 {
+	struct xdict *dict = (struct xdict *)_dict;
 	struct xobject *o;
 
 	if (dict->type != TYPE_XDICT || key->type != TYPE_XSTRING)
 		return -1;
-	if ((o = xdict_remove(dict, key)) == NULL)
+	if ((o = xdict_remove(_dict, key)) == NULL)
 		return -1;
 	xobject_free(o);
 	dict->num_entries--;
@@ -619,8 +644,10 @@ xdict_delete(struct xdict *dict, const struct xstring *key)
 }
 
 int
-xdict_insert(struct xdict *dict, struct xstring *key, struct xobject *value)
+xdict_insert(struct xobject *_dict, struct xobject *key,
+    struct xobject *value)
 {
+	struct xdict *dict = (struct xdict *)_dict;
 	struct xdict_entry *e;
 
 	if (dict->type != TYPE_XDICT || key->type != TYPE_XSTRING)
@@ -639,8 +666,10 @@ xdict_insert(struct xdict *dict, struct xstring *key, struct xobject *value)
 }
 
 int
-xdict_replace(struct xdict *dict, struct xstring *key, struct xobject *value)
+xdict_replace(struct xobject *_dict, struct xobject *key,
+    struct xobject *value)
 {
+	struct xdict *dict = (struct xdict *)_dict;
 	struct xdict_entry *e;
 
 	if (dict->type != TYPE_XDICT || key->type != TYPE_XSTRING)
@@ -666,8 +695,10 @@ xdict_replace(struct xdict *dict, struct xstring *key, struct xobject *value)
 }
 
 size_t
-xdict_len(const struct xdict *dict)
+xdict_len(const struct xobject *_dict)
 {
+	struct xdict *dict = (struct xdict *)_dict;
+
 	if (dict->type != TYPE_XDICT)
 		return 0;
 	return dict->num_entries;

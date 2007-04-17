@@ -97,14 +97,20 @@ array_ndx(char *s, size_t *alen, size_t *skip, char **errp)
 
 /* XXX this really needs meaningful return codes */
 int
-xnamespace_lookup(struct xdict *ns, char *location, struct xobject **obj,
+xnamespace_lookup(struct xobject *ns, char *location, struct xobject **obj,
     char *ebuf, size_t elen)
 {
-	struct xdict *current = ns;
+	struct xobject *current = ns;
 	struct xobject *next;
 	char name[XNAMESPACE_MAX_ID_LENGTH];
 	char type, *cp;
 	size_t l, o = 0, ndx;
+
+	if (xobject_type(ns) != TYPE_XDICT) {
+		format_err(o, location, ebuf, elen,
+		    "Namespace is not of dictionary type");
+		return -1;
+	}
 
 	if (obj != NULL)
 		*obj = NULL;
@@ -142,7 +148,7 @@ xnamespace_lookup(struct xdict *ns, char *location, struct xobject **obj,
 				    "Name \"%s\" is not a dictionary", name);
 				return -1;
 			}
-			current = (struct xdict *)next;
+			current = next;
 		} else if (type == '[') {
 			if (xobject_type(next) != TYPE_XARRAY) {
 				format_err(o, location, ebuf, elen,
@@ -156,12 +162,12 @@ xnamespace_lookup(struct xdict *ns, char *location, struct xobject **obj,
 				return -1;
 			}
 			o += l;
-			if (ndx >= xarray_len((struct xarray *)next)) {
+			if (ndx >= xarray_len(next)) {
 				format_err(o, location, ebuf, elen,
 				    "Array index is out of bounds");
 				return -1;
 			}			
-			next = xarray_item((struct xarray *)next, ndx);
+			next = xarray_item(next, ndx);
 			goto resolve_next;
 		} else {
 			format_err(o, location, ebuf, elen, "Parse error");
@@ -179,13 +185,13 @@ xalloc_by_typechar(int typechar, struct xobject **xop, char **namep)
 {
 	switch (typechar) {
 	case '.':
-		if ((*xop = (struct xobject *)xdict_new()) == NULL) {
+		if ((*xop = xdict_new()) == NULL) {
 			*namep = "Allocation of dictionary failed";
 			return -1;
 		}
 		return 0;
 	case '[':
-		if ((*xop = (struct xobject *)xarray_new()) == NULL) {
+		if ((*xop = xarray_new()) == NULL) {
 			*namep = "Allocation of array failed";
 			return -1;
 		}
@@ -199,14 +205,20 @@ xalloc_by_typechar(int typechar, struct xobject **xop, char **namep)
 /* XXX this really needs meaningful return codes */
 /* XXX O gorgon! this is ugly code */
 int
-xnamespace_set(struct xdict *ns, char *location, struct xobject *obj,
+xnamespace_set(struct xobject *ns, char *location, struct xobject *obj,
     char *ebuf, size_t elen)
 {
-	struct xdict *current = ns;
+	struct xobject *current = ns;
 	struct xobject *next, *n2;
 	char name[XNAMESPACE_MAX_ID_LENGTH];
 	char type, *cp;
 	size_t ndx, l, o = 0;
+
+	if (xobject_type(ns) != TYPE_XDICT) {
+		format_err(o, location, ebuf, elen,
+		    "Namespace is not of dictionary type");
+		return -1;
+	}
 
 	if (*location == '\0') {
 		format_err(o, location, ebuf, elen,
@@ -225,7 +237,7 @@ xnamespace_set(struct xdict *ns, char *location, struct xobject *obj,
 			    "Name \"%.8s...\" too long", name);
 			return -1;
 		}
-		next = (struct xobject *)xdict_item_s(current, name);
+		next = xdict_item_s(current, name);
 		o += l;
 		type = *(location + o++);
  next_array:
@@ -261,7 +273,7 @@ xnamespace_set(struct xdict *ns, char *location, struct xobject *obj,
 				    "\"%s\" is not a dictionary", name);
 				return -1;
 			}
-			current = (struct xdict *)next;
+			current = next;
 			continue;
 		}
 
@@ -287,15 +299,14 @@ xnamespace_set(struct xdict *ns, char *location, struct xobject *obj,
 			 * We are at the end of the string, so
 			 * insert the object here.
 			 */
-			if (xarray_set((struct xarray *)next,
-			    ndx, obj) == -1) {
+			if (xarray_set(next, ndx, obj) == -1) {
 				format_err(o, location, ebuf, elen,
 				    "xarray_set failed");
 				return -1;
 			}
 			return 0;
 		}
-		if ((n2 = xarray_item((struct xarray *)next, ndx)) == NULL) {
+		if ((n2 = xarray_item(next, ndx)) == NULL) {
 			/*
 			 * If the entry doesn't exist yet in the array,
 			 * create and insert it. We need to look ahead to
@@ -305,8 +316,7 @@ xnamespace_set(struct xdict *ns, char *location, struct xobject *obj,
 				format_err(o, location, ebuf, elen, "%s", cp);
 				return -1;
 			}
-			if (xarray_set((struct xarray *)next,
-			    ndx, n2) == -1) {
+			if (xarray_set(next, ndx, n2) == -1) {
 				format_err(o, location, ebuf, elen,
 				"xdict_insert_s failed");
 				return -1;
