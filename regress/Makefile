@@ -8,45 +8,45 @@ CFLAGS+=    -Wunused
 CFLAGS+=    -Wsign-compare
 #CFLAGS+=    -Wbounded
 CFLAGS+=    -Wshadow
-#CFLAGS+=    -Wno-pointer-sign
-#CFLAGS+=    -Wno-attributes
+CFLAGS+=    -Wno-pointer-sign
+CFLAGS+=    -Wno-attributes
 
 CFLAGS+=    -g
 CFLAGS+=    -I..
 
 LDFLAGS=-g 
-LIBS=../libxobject.a
+LIBS=../libmobject.a
 
-TARGETS=t0 t1 t2 t_strstcpy
-EXEC_TARGETS= t_strstcpy_exec t0_exec t1_exec t2_exec
+TARGETS=mobject_t0 mobject_t1 mobject_t2 t_strstcpy
+EXEC_TARGETS= t_strstcpy_exec mobject_t0_exec mobject_t1_exec mobject_t2_exec
 
-all: ../libxobject.a $(TARGETS) t_start $(EXEC_TARGETS)
+all: ../libmobject.a $(TARGETS) t_start $(EXEC_TARGETS)
 
 t_start:
 	@echo Running tests
 
-t0_exec: t0
-	@./t0
+mobject_t0_exec: mobject_t0
+	@./mobject_t0
 
-t0: t0.o ../libxobject.a 
-	$(CC) -o $@ t0.o $(LDFLAGS) $(LIBS)
+mobject_t0: mobject_t0.o ../libmobject.a 
+	$(CC) -o $@ mobject_t0.o $(LDFLAGS) $(LIBS)
 
-t1_exec: t1
-	@./t1
+mobject_t1_exec: mobject_t1
+	@./mobject_t1
 
-t1: t1.o ../libxobject.a 
-	$(CC) -o $@ t1.o $(LDFLAGS) $(LIBS)
+mobject_t1: mobject_t1.o ../libmobject.a 
+	$(CC) -o $@ mobject_t1.o $(LDFLAGS) $(LIBS)
 
-t2_exec: t2
-	@./t2
+mobject_t2_exec: mobject_t2
+	@./mobject_t2
 
-t2: t2.o ../libxobject.a 
-	$(CC) -o $@ t2.o $(LDFLAGS) $(LIBS)
+mobject_t2: mobject_t2.o ../libmobject.a 
+	$(CC) -o $@ mobject_t2.o $(LDFLAGS) $(LIBS)
 
 t_strstcpy_exec: t_strstcpy
 	@./t_strstcpy
 
-t_strstcpy: t_strstcpy.o ../libxobject.a 
+t_strstcpy: t_strstcpy.o ../libmobject.a 
 	$(CC) -o $@ t_strstcpy.o $(LDFLAGS) $(LIBS)
 
 clean:

@@ -19,227 +19,227 @@
 #include <sys/types.h>
 #include <stddef.h>
 
-#include "xobject.h"
+#include "mobject.h"
 
 /* XXX: this is all mechanical, move most of it to #defines */
 
 int
-xarray_append_s(struct xobject *array, const char *v)
+marray_append_s(struct mobject *array, const char *v)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = (struct xobject *)xstring_new(v)) == NULL)
+	if ((tmp = (struct mobject *)mstring_new(v)) == NULL)
 		return -1;
-	if ((r = xarray_append(array, tmp)) == -1)
-		xobject_free(tmp);
+	if ((r = marray_append(array, tmp)) == -1)
+		mobject_free(tmp);
 	return r;
 }
 
 int
-xarray_append_i(struct xobject *array, int64_t v)
+marray_append_i(struct mobject *array, int64_t v)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = (struct xobject *)xint_new(v)) == NULL)
+	if ((tmp = (struct mobject *)mint_new(v)) == NULL)
 		return -1;
-	if ((r = xarray_append(array, tmp)) == -1)
-		xobject_free(tmp);
+	if ((r = marray_append(array, tmp)) == -1)
+		mobject_free(tmp);
 	return r;
 }
 
-struct xobject *
-xdict_item_s(const struct xobject *dict, const char *key)
+struct mobject *
+mdict_item_s(const struct mobject *dict, const char *key)
 {
-	struct xobject *tmp;
-	struct xobject *r;
+	struct mobject *tmp;
+	struct mobject *r;
 
-	if ((tmp = xstring_new(key)) == NULL)
+	if ((tmp = mstring_new(key)) == NULL)
 		return NULL;
-	r = xdict_item(dict, tmp);
-	xobject_free((struct xobject *)tmp);
+	r = mdict_item(dict, tmp);
+	mobject_free((struct mobject *)tmp);
 	return r;
 }
 
-struct xobject *
-xdict_remove_s(struct xobject *dict, const char *key)
+struct mobject *
+mdict_remove_s(struct mobject *dict, const char *key)
 {
-	struct xobject *tmp;
-	struct xobject *r;
+	struct mobject *tmp;
+	struct mobject *r;
 
-	if ((tmp = xstring_new(key)) == NULL)
+	if ((tmp = mstring_new(key)) == NULL)
 		return NULL;
-	r = xdict_remove(dict, tmp);
-	xobject_free((struct xobject *)tmp);
+	r = mdict_remove(dict, tmp);
+	mobject_free((struct mobject *)tmp);
 	return r;
 }
 
 int
-xdict_delete_s(struct xobject *dict, const char *key)
+mdict_delete_s(struct mobject *dict, const char *key)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = xstring_new(key)) == NULL)
+	if ((tmp = mstring_new(key)) == NULL)
 		return -1;
-	r = xdict_delete(dict, tmp);
-	xobject_free((struct xobject *)tmp);
+	r = mdict_delete(dict, tmp);
+	mobject_free((struct mobject *)tmp);
 	return r;
 }
 
 int
-xdict_insert_s(struct xobject *dict, const char *key, struct xobject *value)
+mdict_insert_s(struct mobject *dict, const char *key, struct mobject *value)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = xstring_new(key)) == NULL)
+	if ((tmp = mstring_new(key)) == NULL)
 		return -1;
-	if ((r = xdict_insert(dict, tmp, value)) == -1)
-		xobject_free((struct xobject *)tmp);
+	if ((r = mdict_insert(dict, tmp, value)) == -1)
+		mobject_free((struct mobject *)tmp);
 	return r;
 }
 
 int
-xdict_insert_ss(struct xobject *dict, const char *key, const char *value)
+mdict_insert_ss(struct mobject *dict, const char *key, const char *value)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = xstring_new(value)) == NULL)
+	if ((tmp = mstring_new(value)) == NULL)
 		return -1;
-	if ((r = xdict_insert_s(dict, key, (struct xobject *)tmp)) == -1)
-		xobject_free((struct xobject *)tmp);
+	if ((r = mdict_insert_s(dict, key, (struct mobject *)tmp)) == -1)
+		mobject_free((struct mobject *)tmp);
 	return r;
 }
 
 int 
-xdict_insert_si(struct xobject *dict, const char *key, int64_t value)
+mdict_insert_si(struct mobject *dict, const char *key, int64_t value)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = xint_new(value)) == NULL)
+	if ((tmp = mint_new(value)) == NULL)
 		return -1;
-	if ((r = xdict_insert_s(dict, key, (struct xobject *)tmp)) == -1)
-		xobject_free((struct xobject *)tmp);
+	if ((r = mdict_insert_s(dict, key, (struct mobject *)tmp)) == -1)
+		mobject_free((struct mobject *)tmp);
 	return r;
 }
 
 int
-xdict_insert_sd(struct xobject *dict, const char *key)
+mdict_insert_sd(struct mobject *dict, const char *key)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = xdict_new()) == NULL)
+	if ((tmp = mdict_new()) == NULL)
 		return -1;
-	if ((r = xdict_insert_s(dict, key, (struct xobject *)tmp)) == -1)
-		xobject_free((struct xobject *)tmp);
+	if ((r = mdict_insert_s(dict, key, (struct mobject *)tmp)) == -1)
+		mobject_free((struct mobject *)tmp);
 	return r;
 }
 
 int
-xdict_insert_sa(struct xobject *dict, const char *key)
+mdict_insert_sa(struct mobject *dict, const char *key)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = xarray_new()) == NULL)
+	if ((tmp = marray_new()) == NULL)
 		return -1;
-	if ((r = xdict_insert_s(dict, key, (struct xobject *)tmp)) == -1)
-		xobject_free((struct xobject *)tmp);
+	if ((r = mdict_insert_s(dict, key, (struct mobject *)tmp)) == -1)
+		mobject_free((struct mobject *)tmp);
 	return r;
 }
 
 int
-xdict_insert_sn(struct xobject *dict, const char *key)
+mdict_insert_sn(struct mobject *dict, const char *key)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = xnone_new()) == NULL)
+	if ((tmp = mnone_new()) == NULL)
 		return -1;
-	if ((r = xdict_insert_s(dict, key, (struct xobject *)tmp)) == -1)
-		xobject_free((struct xobject *)tmp);
+	if ((r = mdict_insert_s(dict, key, (struct mobject *)tmp)) == -1)
+		mobject_free((struct mobject *)tmp);
 	return r;
 }
 
 int
-xdict_replace_s(struct xobject *dict, const char *key, struct xobject *value)
+mdict_replace_s(struct mobject *dict, const char *key, struct mobject *value)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = xstring_new(key)) == NULL)
+	if ((tmp = mstring_new(key)) == NULL)
 		return -1;
-	if ((r = xdict_replace(dict, tmp, value)) == -1)
-		xobject_free((struct xobject *)tmp);
+	if ((r = mdict_replace(dict, tmp, value)) == -1)
+		mobject_free((struct mobject *)tmp);
 	return r;
 }
 
 int
-xdict_replace_ss(struct xobject *dict, const char *key, const char *value)
+mdict_replace_ss(struct mobject *dict, const char *key, const char *value)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = xstring_new(value)) == NULL)
+	if ((tmp = mstring_new(value)) == NULL)
 		return -1;
-	if ((r = xdict_replace_s(dict, key, (struct xobject *)tmp)) == -1)
-		xobject_free((struct xobject *)tmp);
+	if ((r = mdict_replace_s(dict, key, (struct mobject *)tmp)) == -1)
+		mobject_free((struct mobject *)tmp);
 	return r;
 }
 
 int
-xdict_replace_si(struct xobject *dict, const char *key, int64_t value)
+mdict_replace_si(struct mobject *dict, const char *key, int64_t value)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = xint_new(value)) == NULL)
+	if ((tmp = mint_new(value)) == NULL)
 		return -1;
-	if ((r = xdict_replace_s(dict, key, (struct xobject *)tmp)) == -1)
-		xobject_free((struct xobject *)tmp);
+	if ((r = mdict_replace_s(dict, key, (struct mobject *)tmp)) == -1)
+		mobject_free((struct mobject *)tmp);
 	return r;
 }
 
 int
-xdict_replace_sd(struct xobject *dict, const char *key)
+mdict_replace_sd(struct mobject *dict, const char *key)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = xdict_new()) == NULL)
+	if ((tmp = mdict_new()) == NULL)
 		return -1;
-	if ((r = xdict_replace_s(dict, key, (struct xobject *)tmp)) == -1)
-		xobject_free((struct xobject *)tmp);
+	if ((r = mdict_replace_s(dict, key, (struct mobject *)tmp)) == -1)
+		mobject_free((struct mobject *)tmp);
 	return r;
 }
 
 int
-xdict_replace_sa(struct xobject *dict, const char *key)
+mdict_replace_sa(struct mobject *dict, const char *key)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = xarray_new()) == NULL)
+	if ((tmp = marray_new()) == NULL)
 		return -1;
-	if ((r = xdict_replace_s(dict, key, (struct xobject *)tmp)) == -1)
-		xobject_free((struct xobject *)tmp);
+	if ((r = mdict_replace_s(dict, key, (struct mobject *)tmp)) == -1)
+		mobject_free((struct mobject *)tmp);
 	return r;
 }
 
 int
-xdict_replace_sn(struct xobject *dict, const char *key)
+mdict_replace_sn(struct mobject *dict, const char *key)
 {
-	struct xobject *tmp;
+	struct mobject *tmp;
 	int r;
 
-	if ((tmp = xnone_new()) == NULL)
+	if ((tmp = mnone_new()) == NULL)
 		return -1;
-	if ((r = xdict_replace_s(dict, key, (struct xobject *)tmp)) == -1)
-		xobject_free((struct xobject *)tmp);
+	if ((r = mdict_replace_s(dict, key, (struct mobject *)tmp)) == -1)
+		mobject_free((struct mobject *)tmp);
 	return r;
 }

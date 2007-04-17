@@ -8,25 +8,25 @@ CFLAGS+=    -Wunused
 CFLAGS+=    -Wsign-compare
 #CFLAGS+=    -Wbounded
 CFLAGS+=    -Wshadow
-#CFLAGS+=    -Wno-pointer-sign
-#CFLAGS+=    -Wno-attributes
+CFLAGS+=    -Wno-pointer-sign
+CFLAGS+=    -Wno-attributes
 
 CFLAGS+=    -g
 CFLAGS+=    -I.
 
 RANLIB=ranlib
 
-LIBXOBJECT_OBJS=	xobject.o xnamespace.o helpers.o
+LIBMOBJECT_OBJS=	mobject.o mnamespace.o helpers.o
 COMPAT_OBJS=		vis.o strlcpy.o strlcat.o strstcpy.o
 
-all: libxobject.a
+all: libmobject.a
 
-libxobject.a: $(LIBXOBJECT_OBJS) $(COMPAT_OBJS)
-	$(AR) rv $@ $(LIBXOBJECT_OBJS) $(COMPAT_OBJS)
+libmobject.a: $(LIBMOBJECT_OBJS) $(COMPAT_OBJS)
+	$(AR) rv $@ $(LIBMOBJECT_OBJS) $(COMPAT_OBJS)
 	$(RANLIB) $@
 
 clean:
-	rm -f *.o libxobject.a core *.core
+	rm -f *.o libmobject.a core *.core
 	cd regress && make clean
 
 test: all

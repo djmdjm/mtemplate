@@ -13,19 +13,19 @@
 #include <string.h>
 #include <assert.h>
 
-#include "xobject.h"
+#include "mobject.h"
 #include "strlcat.h"
 
 int
 main(int argc, char **argv)
 {
-	struct xobject *ns, *xd, *xd2;
-	struct xobject *xa, *xa2;
-	struct xobject *xi;
+	struct mobject *ns, *xd, *xd2;
+	struct mobject *xa, *xa2;
+	struct mobject *xi;
 	u_int i;
 	char ebuf[8192], nbuf[8192];
-	struct xobject *xo;
-	struct xobject *hello, *there, *there42, *z24, *z10_1, *z10_2_wow;
+	struct mobject *xo;
+	struct mobject *hello, *there, *there42, *z24, *z10_1, *z10_2_wow;
 
 	/* Turn on all malloc debugging on OpenBSD */
 	setenv("MALLOC_OPTIONS", "AFGJPRX", 1);
@@ -34,44 +34,44 @@ main(int argc, char **argv)
 	printf("t1:");
 
 	/* Prepare an namespace */
-	assert((ns = xd = xdict_new()) != NULL);
-	assert((xd2 = xdict_new()) != NULL);
+	assert((ns = xd = mdict_new()) != NULL);
+	assert((xd2 = mdict_new()) != NULL);
 	hello = xd2;
-	assert(xdict_insert_s(xd, "hello", xd2) == 0);
-	assert((xa = xarray_new()) != NULL);
+	assert(mdict_insert_s(xd, "hello", xd2) == 0);
+	assert((xa = marray_new()) != NULL);
 	there = xa;
-	assert(xdict_insert_s(xd2, "there", xa) == 0);
+	assert(mdict_insert_s(xd2, "there", xa) == 0);
 
 	for (i = 0; i < 43; i++) {
-		assert((xd2 = xdict_new()) != NULL);
-		assert(xarray_append(xa, xd2) == 0);
+		assert((xd2 = mdict_new()) != NULL);
+		assert(marray_append(xa, xd2) == 0);
 	}
 	there42 = xd2;
 
-	assert((xd = xdict_new()) != NULL);
-	assert(xdict_insert_s(xd2, "x", xd) == 0);
-	assert((xd2 = xdict_new()) != NULL);
-	assert(xdict_insert_s(xd, "y", xd2) == 0);
-	assert((xa = xarray_new()) != NULL);
-	assert(xdict_insert_s(xd2, "z", xa) == 0);
+	assert((xd = mdict_new()) != NULL);
+	assert(mdict_insert_s(xd2, "x", xd) == 0);
+	assert((xd2 = mdict_new()) != NULL);
+	assert(mdict_insert_s(xd, "y", xd2) == 0);
+	assert((xa = marray_new()) != NULL);
+	assert(mdict_insert_s(xd2, "z", xa) == 0);
 
 	for (i = 0; i < 30; i++) {
 		if (i == 10) {
-			assert((xa2 = xarray_new()) != NULL);
-			assert(xarray_append(xa, xa2) == 0);
-			assert((xi = xint_new(1234)) != NULL);
-			assert(xarray_append(xa2, xi) == 0);
-			assert((xi = xint_new(5678)) != NULL);
-			assert(xarray_append(xa2, xi) == 0);
+			assert((xa2 = marray_new()) != NULL);
+			assert(marray_append(xa, xa2) == 0);
+			assert((xi = mint_new(1234)) != NULL);
+			assert(marray_append(xa2, xi) == 0);
+			assert((xi = mint_new(5678)) != NULL);
+			assert(marray_append(xa2, xi) == 0);
 			z10_1 = xi;
-			assert((xd = xdict_new()) != NULL);
-			assert(xarray_append(xa2, xd) == 0);
-			assert(xdict_insert_ss(xd, "wow", "indeed") == 0);
-			assert((z10_2_wow = xdict_item_s(xd, "wow")) != NULL);
+			assert((xd = mdict_new()) != NULL);
+			assert(marray_append(xa2, xd) == 0);
+			assert(mdict_insert_ss(xd, "wow", "indeed") == 0);
+			assert((z10_2_wow = mdict_item_s(xd, "wow")) != NULL);
 			continue;
 		}
-		assert((xi = xint_new(i)) != NULL);
-		assert(xarray_append(xa, xi) == 0);
+		assert((xi = mint_new(i)) != NULL);
+		assert(marray_append(xa, xi) == 0);
 		if (i == 24)
 			z24 = xi;
 	}
@@ -208,7 +208,7 @@ main(int argc, char **argv)
 	assert(xo == z10_2_wow);
 	printf(".");
 
-	xobject_free(ns);
+	mobject_free(ns);
 
 	printf("\n");
 	return 0;

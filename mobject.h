@@ -18,25 +18,25 @@
 
 /* Simple generic object system, loosely modelled on Python's */
 
-#ifndef _XOBJECT_H
-#define _XOBJECT_H
+#ifndef _MOBJECT_H
+#define _MOBJECT_H
 
 #include <sys/types.h>
 #include <stdint.h>
 
-enum xobject_type {
-	TYPE_XNONE,
-	TYPE_XSTRING,
-	TYPE_XINT,
-	TYPE_XARRAY,
-	TYPE_XDICT,
+enum mobject_type {
+	TYPE_MNONE,
+	TYPE_MSTRING,
+	TYPE_MINT,
+	TYPE_MARRAY,
+	TYPE_MDICT,
 };
 
-struct xobject;
+struct mobject;
 
-struct xiteritem {
-	struct xobject *key;
-	struct xobject *value;
+struct miteritem {
+	struct mobject *key;
+	struct mobject *value;
 };
 
 /*
@@ -44,7 +44,7 @@ struct xiteritem {
  *
  * Returns: pointer to object or NULL on failure
  */
-struct xobject *xnone_new(void);
+struct mobject *mnone_new(void);
 
 /*
  * Allocate and populate a new integer object from the integer
@@ -52,7 +52,7 @@ struct xobject *xnone_new(void);
  *
  * Returns: pointer to object or NULL on failure
  */
-struct xobject *xint_new(int64_t v);
+struct mobject *mint_new(int64_t v);
 
 /*
  * Allocate and populate a new string object from the memory buffer
@@ -63,7 +63,7 @@ struct xobject *xint_new(int64_t v);
  *
  * Returns: pointer to object or NULL on failure
  */
-struct xobject *xstring_new2(const u_char *value, size_t len);
+struct mobject *mstring_new2(const u_char *value, size_t len);
 
 /*
  * Allocate and populate a new string object from the nul-terminated
@@ -74,21 +74,21 @@ struct xobject *xstring_new2(const u_char *value, size_t len);
  *
  * Returns: pointer to object or NULL on failure
  */
-struct xobject *xstring_new(const u_char *value);
+struct mobject *mstring_new(const u_char *value);
 
 /*
  * Allocate an empty array object
  *
  * Returns: pointer to object or NULL on failure
  */
-struct xobject *xarray_new(void);
+struct mobject *marray_new(void);
 
 /*
  * Allocate an empty dictionary object
  *
  * Returns: pointer to object or NULL on failure
  */
-struct xobject *xdict_new(void);
+struct mobject *mdict_new(void);
 
 /*
  * Deallocate the object "o" and any objects it references.
@@ -96,12 +96,12 @@ struct xobject *xdict_new(void);
  * holds are deallocated too including (recursively) other dictionaries
  * or arrays.
  */
-void xobject_free(struct xobject *o);
+void mobject_free(struct mobject *o);
 
 /*
  * Returns the type of the specified object
  */
-enum xobject_type xobject_type(const struct xobject *obj);
+enum mobject_type mobject_type(const struct mobject *obj);
 
 /*
  * Renders the specified object as a nul-terminated string into the
@@ -113,7 +113,7 @@ enum xobject_type xobject_type(const struct xobject *obj);
  * "s" if it was of unlimited size, up to SIZE_T_MAX and not including
  * the terminating nul byte. (same as strlcpy, snprintf)
  */
-size_t xobject_to_string(const struct xobject *o, u_char *s, size_t len);
+size_t mobject_to_string(const struct mobject *o, u_char *s, size_t len);
 
 /*
  * Makes "deep copy" copy of the specified object, recursively copying
@@ -121,29 +121,29 @@ size_t xobject_to_string(const struct xobject *o, u_char *s, size_t len);
  *
  * Returns a copy of the object(s) or NULL on failure
  */
-struct xobject *xobject_deepcopy(struct xobject *o);
+struct mobject *mobject_deepcopy(struct mobject *o);
 
 /*
  * Returns the value of the integer object "v"
  */
-int64_t xint_value(const struct xobject *v);
+int64_t mint_value(const struct mobject *v);
 
 /*
- * Adds the value 'n' to the xint 'v'
+ * Adds the value 'n' to the mint 'v'
  *
  * Returns 0 on success, -1 on failure.
  */
-int xint_add(struct xobject *v, int64_t n);
+int mint_add(struct mobject *v, int64_t n);
 
 /*
  * Returns the length of a string object "s"
  */
-size_t xstring_len(const struct xobject *s);
+size_t mstring_len(const struct mobject *s);
 
 /*
  * Returns a pointer to the data in the string object "s"
  */
-const u_char *xstring_ptr(const struct xobject *s);
+const u_char *mstring_ptr(const struct mobject *s);
 
 /*
  * Prepends the object "object" to the array "array". All existing entries
@@ -156,11 +156,11 @@ const u_char *xstring_ptr(const struct xobject *s);
  *
  * Returns 0 on success, -1 on failure
  */
-int xarray_prepend(struct xobject *array, struct xobject *object);
+int marray_prepend(struct mobject *array, struct mobject *object);
 
 /*
  * Appends the object "object" to the array "array". The object will
- * be accessible at index (xarray_len(array) - 1).
+ * be accessible at index (marray_len(array) - 1).
  *
  * NB. adding an object to the array transfers ownership of the object
  * to the array. The caller should not modify or deallocate the object
@@ -168,9 +168,9 @@ int xarray_prepend(struct xobject *array, struct xobject *object);
  *
  * Returns 0 on success, -1 on failure
  */
-int xarray_append(struct xobject *array, struct xobject *object);
-int xarray_append_s(struct xobject *array, const char *v);
-int xarray_append_i(struct xobject *array, int64_t v);
+int marray_append(struct mobject *array, struct mobject *object);
+int marray_append_s(struct mobject *array, const char *v);
+int marray_append_i(struct mobject *array, int64_t v);
 
 /*
  * Sets entry "ndx" of array "array" to object "object". Any existing object
@@ -184,12 +184,12 @@ int xarray_append_i(struct xobject *array, int64_t v);
  *
  * Returns 0 on success, -1 on failure
  */
-int xarray_set(struct xobject *array, size_t ndx, struct xobject *object);
+int marray_set(struct mobject *array, size_t ndx, struct mobject *object);
 
 /*
  * Returns the number of entries in the array "array"
  */
-size_t xarray_len(struct xobject *array);
+size_t marray_len(struct mobject *array);
 
 /*
  * Returns the last (highest index) entry in the array "array" or NULL if
@@ -198,7 +198,7 @@ size_t xarray_len(struct xobject *array);
  * NB. the item is still "owned" by the array and should not be modified
  * by the caller
  */
-struct xobject *xarray_last(struct xobject *array);
+struct mobject *marray_last(struct mobject *array);
 
 /*
  * Returns the first (lowest index) entry in the array "array" or NULL if
@@ -207,7 +207,7 @@ struct xobject *xarray_last(struct xobject *array);
  * NB. the item is still "owned" by the array and should not be modified
  * by the caller
  */
-struct xobject *xarray_first(struct xobject *array);
+struct mobject *marray_first(struct mobject *array);
 
 /*
  * Remove and return the last (highest index) entry in the array "array"
@@ -218,7 +218,7 @@ struct xobject *xarray_first(struct xobject *array);
  * NB. removing an item from the array transfers ownership for the item to
  * the caller, including the responsibility for deallocation
  */
-struct xobject *xarray_pop(struct xobject *array);
+struct mobject *marray_pop(struct mobject *array);
 
 /*
  * Remove and return the first (lowest index) entry in the array "array".
@@ -230,7 +230,7 @@ struct xobject *xarray_pop(struct xobject *array);
  * NB. removing an item from the array transfers ownership for the item to
  * the caller, including the responsibility for deallocation
  */
-struct xobject *xarray_pull(struct xobject *array);
+struct mobject *marray_pull(struct mobject *array);
 
 /*
  * Return the array element at the specified index "ndx"
@@ -238,7 +238,7 @@ struct xobject *xarray_pull(struct xobject *array);
  * NB. the item is still "owned" by the array and should not be modified
  * by the caller
  */
-struct xobject *xarray_item(struct xobject *array, size_t ndx);
+struct mobject *marray_item(struct mobject *array, size_t ndx);
 
 /*
  * Return the dictionary item referenced by the specified "key" or NULL
@@ -247,9 +247,9 @@ struct xobject *xarray_item(struct xobject *array, size_t ndx);
  * NB. the item is still "owned" by the dictionary and should not be
  * modified by the caller
  */
-struct xobject *xdict_item(const struct xobject *dict,
-    const struct xobject *key);
-struct xobject *xdict_item_s(const struct xobject *dict, const char *key);
+struct mobject *mdict_item(const struct mobject *dict,
+    const struct mobject *key);
+struct mobject *mdict_item_s(const struct mobject *dict, const char *key);
 
 /*
  * Remove and return the dictionary item referenced by the specified "key"
@@ -258,17 +258,17 @@ struct xobject *xdict_item_s(const struct xobject *dict, const char *key);
  * NB. removing an item from the dictionary transfers ownership for the
  * item to the caller, including the responsibility for deallocation
  */
-struct xobject *xdict_remove(struct xobject *dict, const struct xobject *key);
-struct xobject *xdict_remove_s(struct xobject *dict, const char *key);
+struct mobject *mdict_remove(struct mobject *dict, const struct mobject *key);
+struct mobject *mdict_remove_s(struct mobject *dict, const char *key);
 
 /*
  * Remove and deallocate a dictionary item referenced by the specified "key"
- * NB. deallocation will be recursive as described in xobject_free()
+ * NB. deallocation will be recursive as described in mobject_free()
  *
  * Returns: 0 on success, -1 on failure
  */
-int xdict_delete(struct xobject *dict, const struct xobject *key);
-int xdict_delete_s(struct xobject *dict, const char *key);
+int mdict_delete(struct mobject *dict, const struct mobject *key);
+int mdict_delete_s(struct mobject *dict, const char *key);
 
 /*
  * Insert an item identified by "key" of value "value" into
@@ -281,21 +281,21 @@ int xdict_delete_s(struct xobject *dict, const char *key);
  *
  * Returns: 0 on success, -1 on failure
  */
-int xdict_insert(struct xobject *dict, struct xobject *key,
-    struct xobject *value);
-int xdict_insert_s(struct xobject *dict, const char *key,
-    struct xobject *value);
-int xdict_insert_ss(struct xobject *dict, const char *key, const char *value);
-int xdict_insert_si(struct xobject *dict, const char *key, int64_t value);
-int xdict_insert_sa(struct xobject *dict, const char *key);
-int xdict_insert_sd(struct xobject *dict, const char *key);
-int xdict_insert_sn(struct xobject *dict, const char *key);
+int mdict_insert(struct mobject *dict, struct mobject *key,
+    struct mobject *value);
+int mdict_insert_s(struct mobject *dict, const char *key,
+    struct mobject *value);
+int mdict_insert_ss(struct mobject *dict, const char *key, const char *value);
+int mdict_insert_si(struct mobject *dict, const char *key, int64_t value);
+int mdict_insert_sa(struct mobject *dict, const char *key);
+int mdict_insert_sd(struct mobject *dict, const char *key);
+int mdict_insert_sn(struct mobject *dict, const char *key);
 
 /*
  * Insert an item identified by "key" of value "value" into
  * dictionary "dict". If an item with the same key already exists it
  * is removed and deallocated first. Note that deallocation will occur
- * recursively as described in xobject_free()
+ * recursively as described in mobject_free()
  *
  * NB. successfully adding to the dictionary transfers ownership of both
  * the key and the value. The caller should not modify or deallocate the
@@ -303,20 +303,20 @@ int xdict_insert_sn(struct xobject *dict, const char *key);
  *
  * Returns: 0 on success, -1 on failure
  */
-int xdict_replace(struct xobject *dict, struct xobject *key,
-    struct xobject *value);
-int xdict_replace_s(struct xobject *dict, const char *key,
-    struct xobject *value);
-int xdict_replace_ss(struct xobject *dict, const char *key, const char *value);
-int xdict_replace_si(struct xobject *dict, const char *key, int64_t value);
-int xdict_replace_sa(struct xobject *dict, const char *key);
-int xdict_replace_sd(struct xobject *dict, const char *key);
-int xdict_replace_sn(struct xobject *dict, const char *key);
+int mdict_replace(struct mobject *dict, struct mobject *key,
+    struct mobject *value);
+int mdict_replace_s(struct mobject *dict, const char *key,
+    struct mobject *value);
+int mdict_replace_ss(struct mobject *dict, const char *key, const char *value);
+int mdict_replace_si(struct mobject *dict, const char *key, int64_t value);
+int mdict_replace_sa(struct mobject *dict, const char *key);
+int mdict_replace_sd(struct mobject *dict, const char *key);
+int mdict_replace_sn(struct mobject *dict, const char *key);
 
 /*
  * Returns the number of items in a dictionary
  */
-size_t xdict_len(const struct xobject *dict);
+size_t mdict_len(const struct mobject *dict);
 
 /*
  * Obtains an iterator over the object "obj". Iteration is
@@ -324,18 +324,18 @@ size_t xdict_len(const struct xobject *dict);
  *
  * Returns: pointer to iterator object or NULL on failure
  */
-struct xiterator *xobject_getiter(struct xobject *obj);
+struct miterator *mobject_getiter(struct mobject *obj);
 
 /*
  * Free an iterator
  */
-void xiterator_free(struct xiterator *iter);
+void miterator_free(struct miterator *iter);
 
 /*
  * Return the next value in an iteration or NULL if no more
  * values are available.
  */
-struct xiteritem *xiterator_next(struct xiterator *iter);
+struct miteritem *miterator_next(struct miterator *iter);
 
 /*
  * Look up a name in a dictionary namespace. Names may combine dictionary
@@ -352,7 +352,7 @@ struct xiteritem *xiterator_next(struct xiterator *iter);
  * Returns 0 on success, -1 on failure. On failure, up to "elen" characters
  * will be written into "ebuf" describing the error.
  */
-int xnamespace_lookup(struct xobject *ns, char *location, struct xobject **obj,
+int xnamespace_lookup(struct mobject *ns, char *location, struct mobject **obj,
     char *ebuf, size_t elen);
 
 /*
@@ -372,7 +372,7 @@ int xnamespace_lookup(struct xobject *ns, char *location, struct xobject **obj,
  * Returns 0 on success, -1 on failure. On failure, up to "elen" characters
  * will be written into "ebuf" describing the error.
  */ 
-int xnamespace_set(struct xobject *ns, char *location, struct xobject *obj,
+int xnamespace_set(struct mobject *ns, char *location, struct mobject *obj,
     char *ebuf, size_t elen);
 
-#endif /* _XOBJECT_H */
+#endif /* _MOBJECT_H */

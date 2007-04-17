@@ -1,5 +1,5 @@
 /*
- * Regress helper macros for xobject library
+ * Regress helper macros for mobject library
  * Public domain -- Damien Miller <djm@mindrot.org> 2007-03-27
  */
 
@@ -10,81 +10,81 @@
 
 /* Expect object at position in array */
 #define X_STRING_AT_ARRAY(a, loc, expect) do { \
-		const struct xobject *xo; \
-		assert((xo = xarray_item(a, loc)) != NULL); \
-		assert(xobject_type(xo) == TYPE_XSTRING); \
-		assert(strcmp(xstring_ptr(xo), \
+		const struct mobject *xo; \
+		assert((xo = marray_item(a, loc)) != NULL); \
+		assert(mobject_type(xo) == TYPE_MSTRING); \
+		assert(strcmp(mstring_ptr(xo), \
 		    expect) == 0); \
 	} while (0)
 #define X_NONE_AT_ARRAY(a, loc) do { \
-		const struct xobject *xo; \
-		assert((xo = xarray_item(a, loc)) != NULL); \
-		assert(xobject_type(xo) == TYPE_XNONE); \
+		const struct mobject *xo; \
+		assert((xo = marray_item(a, loc)) != NULL); \
+		assert(mobject_type(xo) == TYPE_MNONE); \
 	} while (0)
 #define X_INT_AT_ARRAY(a, loc, expect) do { \
-		const struct xobject *xo; \
-		assert((xo = xarray_item(a, loc)) != NULL); \
-		assert(xobject_type(xo) == TYPE_XINT); \
-		assert(xint_value(xo) == expect); \
+		const struct mobject *xo; \
+		assert((xo = marray_item(a, loc)) != NULL); \
+		assert(mobject_type(xo) == TYPE_MINT); \
+		assert(mint_value(xo) == expect); \
 	} while (0)
 
 /* Expect object at popped off array */
 #define X_STRING_POP_ARRAY(a, expect) do { \
-		struct xobject *xo; \
-		assert((xo = xarray_pop(a)) != NULL); \
-		assert(xobject_type(xo) == TYPE_XSTRING); \
-		assert(strcmp(xstring_ptr(xo), \
+		struct mobject *xo; \
+		assert((xo = marray_pop(a)) != NULL); \
+		assert(mobject_type(xo) == TYPE_MSTRING); \
+		assert(strcmp(mstring_ptr(xo), \
 		    expect) == 0); \
-		xobject_free(xo); \
+		mobject_free(xo); \
 	} while (0)
 #define X_NONE_POP_ARRAY(a) do { \
-		struct xobject *xo; \
-		assert((xo = xarray_pop(a)) != NULL); \
-		assert(xobject_type(xo) == TYPE_XNONE); \
-		xobject_free(xo); \
+		struct mobject *xo; \
+		assert((xo = marray_pop(a)) != NULL); \
+		assert(mobject_type(xo) == TYPE_MNONE); \
+		mobject_free(xo); \
 	} while (0)
 #define X_INT_POP_ARRAY(a, expect) do { \
-		struct xobject *xo; \
-		assert((xo = xarray_pop(a)) != NULL); \
-		assert(xobject_type(xo) == TYPE_XINT); \
-		assert(xint_value(xo) == expect); \
-		xobject_free(xo); \
+		struct mobject *xo; \
+		assert((xo = marray_pop(a)) != NULL); \
+		assert(mobject_type(xo) == TYPE_MINT); \
+		assert(mint_value(xo) == expect); \
+		mobject_free(xo); \
 	} while (0)
 
 /* Expect object in dict */
 #define X_STRING_AT_DICT(d, loc, expect) do { \
-		const struct xobject *xo; \
-		struct xobject *xs; \
-		assert((xs = xstring_new(loc)) != NULL); \
-		assert((xo = xdict_item(d, xs)) != NULL); \
-		assert(xobject_type(xo) == TYPE_XSTRING); \
-		assert(strcmp(xstring_ptr(xo), \
+		const struct mobject *xo; \
+		struct mobject *xs; \
+		assert((xs = mstring_new(loc)) != NULL); \
+		assert((xo = mdict_item(d, xs)) != NULL); \
+		assert(mobject_type(xo) == TYPE_MSTRING); \
+		assert(strcmp(mstring_ptr(xo), \
 		    expect) == 0); \
-		xobject_free(xs); \
+		mobject_free(xs); \
 	} while (0)
 #define X_NONE_AT_DICT(d, loc) do { \
-		const struct xobject *xo; \
-		struct xobject *xs; \
-		assert((xs = xstring_new(loc)) != NULL); \
-		assert((xo = xdict_item(d, xs)) != NULL); \
-		assert(xobject_type(xo) == TYPE_XNONE); \
-		xobject_free(xs); \
+		const struct mobject *xo; \
+		struct mobject *xs; \
+		assert((xs = mstring_new(loc)) != NULL); \
+		assert((xo = mdict_item(d, xs)) != NULL); \
+		assert(mobject_type(xo) == TYPE_MNONE); \
+		mobject_free(xs); \
 	} while (0)
 #define X_INT_AT_DICT(d, loc, expect) do { \
-		const struct xobject *xo; \
-		struct xobject *xs; \
-		assert((xs = xstring_new(loc)) != NULL); \
-		assert((xo = xdict_item(d, xs)) != NULL); \
-		assert(xobject_type(xo) == TYPE_XINT); \
-		assert(xint_value(xo) == expect); \
-		xobject_free(xs); \
+		const struct mobject *xo; \
+		struct mobject *xs; \
+		assert((xs = mstring_new(loc)) != NULL); \
+		assert((xo = mdict_item(d, xs)) != NULL); \
+		assert(mobject_type(xo) == TYPE_MINT); \
+		assert(mint_value(xo) == expect); \
+		mobject_free(xs); \
 	} while (0)
 #define X_NULL_AT_DICT(d, loc) do { \
-		const struct xobject *xo; \
-		struct xobject *xs; \
-		assert((xs = xstring_new(loc)) != NULL); \
-		assert((xo = xdict_item(d, xs)) == NULL); \
-		xobject_free(xs); \
+		const struct mobject *xo; \
+		struct mobject *xs; \
+		assert((xs = mstring_new(loc)) != NULL); \
+		assert((xo = mdict_item(d, xs)) == NULL); \
+		mobject_free(xs); \
 	} while (0)
 
 /* Expect object to string translation */
@@ -92,9 +92,9 @@
 		char buf1[8192], buf2[64]; \
 		size_t l1, l2; \
 		memset(buf2, '*', sizeof(buf2)); \
-		l1 = xobject_to_string(o, \
+		l1 = mobject_to_string(o, \
 		    buf1, sizeof(buf1)); \
-		l2 = xobject_to_string(o, buf2, 5); \
+		l2 = mobject_to_string(o, buf2, 5); \
 		assert(l1 = strlen(s)); \
 		assert(l2 = strlen(s)); \
 		assert(strcmp(buf1, s) == 0); \
@@ -105,9 +105,9 @@
 		char buf1[8192], buf2[64]; \
 		size_t l1, l2; \
 		memset(buf2, '*', sizeof(buf2)); \
-		l1 = xobject_to_string(o, \
+		l1 = mobject_to_string(o, \
 		    buf1, sizeof(buf1)); \
-		l2 = xobject_to_string(o, buf2, 5); \
+		l2 = mobject_to_string(o, buf2, 5); \
 		assert(l1 = strlen(s)); \
 		assert(l2 = strlen(s)); \
 		assert(strncmp(buf1, s, strlen(s)) == 0); \
@@ -117,58 +117,58 @@
 
 /* Expect object at next iteration point */
 #define X_STRING_ARRAY_ITER(i, k, v) do { \
-		const struct xiteritem *ii; \
-		assert((ii = xiterator_next(i)) != NULL); \
-		assert(xobject_type(ii->key) == TYPE_XINT); \
-		assert(xobject_type(ii->value) == TYPE_XSTRING); \
-		assert(xint_value(ii->key) == k); \
-		assert(strcmp(xstring_ptr(ii->value), \
+		const struct miteritem *ii; \
+		assert((ii = miterator_next(i)) != NULL); \
+		assert(mobject_type(ii->key) == TYPE_MINT); \
+		assert(mobject_type(ii->value) == TYPE_MSTRING); \
+		assert(mint_value(ii->key) == k); \
+		assert(strcmp(mstring_ptr(ii->value), \
 		    v) == 0); \
 	} while (0)
 #define X_NONE_ARRAY_ITER(i, k) do { \
-		const struct xiteritem *ii; \
-		assert((ii = xiterator_next(i)) != NULL); \
-		assert(xobject_type(ii->key) == TYPE_XINT); \
-		assert(xobject_type(ii->value) == TYPE_XNONE); \
-		assert(xint_value(ii->key) == k); \
+		const struct miteritem *ii; \
+		assert((ii = miterator_next(i)) != NULL); \
+		assert(mobject_type(ii->key) == TYPE_MINT); \
+		assert(mobject_type(ii->value) == TYPE_MNONE); \
+		assert(mint_value(ii->key) == k); \
 	} while (0)
 #define X_NULL_ARRAY_ITER(i) do { \
-		const struct xiteritem *ii; \
-		assert((ii = xiterator_next(i)) == NULL); \
+		const struct miteritem *ii; \
+		assert((ii = miterator_next(i)) == NULL); \
 	} while (0)
 #define X_INT_ARRAY_ITER(i, k, v) do { \
-		const struct xiteritem *ii; \
-		assert((ii = xiterator_next(i)) != NULL); \
-		assert(xobject_type(ii->key) == TYPE_XINT); \
-		assert(xobject_type(ii->value) == TYPE_XINT); \
-		assert(xint_value(ii->key) == k); \
-		assert(xint_value(ii->value) == v); \
+		const struct miteritem *ii; \
+		assert((ii = miterator_next(i)) != NULL); \
+		assert(mobject_type(ii->key) == TYPE_MINT); \
+		assert(mobject_type(ii->value) == TYPE_MINT); \
+		assert(mint_value(ii->key) == k); \
+		assert(mint_value(ii->value) == v); \
 	} while (0)
 
 /* Fill: [ "pqr", 4, 3, "klm", "abc", 1, None, 2, "def", "hij", None ] */
 #define X_ARRAY_FILL(x) do { \
-		x = xarray_new(); \
-		xarray_prepend(x, xnone_new()); \
-		xarray_prepend(x, xint_new(1)); \
-		xarray_append(x, xint_new(2)); \
-		xarray_prepend(x, xstring_new("abc")); \
-		xarray_append(x, xstring_new("def")); \
-		xarray_append(x, xstring_new("hij")); \
-		xarray_prepend(x, xstring_new("klm")); \
-		xarray_prepend(x, xint_new(3)); \
-		xarray_prepend(x, xint_new(4)); \
-		xarray_append(x, xnone_new()); \
-		xarray_prepend(x, xstring_new("pqr")); \
+		x = marray_new(); \
+		marray_prepend(x, mnone_new()); \
+		marray_prepend(x, mint_new(1)); \
+		marray_append(x, mint_new(2)); \
+		marray_prepend(x, mstring_new("abc")); \
+		marray_append(x, mstring_new("def")); \
+		marray_append(x, mstring_new("hij")); \
+		marray_prepend(x, mstring_new("klm")); \
+		marray_prepend(x, mint_new(3)); \
+		marray_prepend(x, mint_new(4)); \
+		marray_append(x, mnone_new()); \
+		marray_prepend(x, mstring_new("pqr")); \
 	} while (0)
 
 /* Fill: { "a" : None, "b" : "abc", c : "def", d : -64, e : 42 } */
 #define X_DICT_FILL(x) do { \
-		x = xdict_new(); \
-		xdict_insert(x, xstring_new("a"), xnone_new()); \
-		xdict_insert(x, xstring_new("b"), xstring_new("abc")); \
-		xdict_insert(x, xstring_new("c"), xstring_new("def")); \
-		xdict_insert(x, xstring_new("d"), xint_new(-64)); \
-		xdict_insert(x, xstring_new("e"), xint_new(42)); \
+		x = mdict_new(); \
+		mdict_insert(x, mstring_new("a"), mnone_new()); \
+		mdict_insert(x, mstring_new("b"), mstring_new("abc")); \
+		mdict_insert(x, mstring_new("c"), mstring_new("def")); \
+		mdict_insert(x, mstring_new("d"), mint_new(-64)); \
+		mdict_insert(x, mstring_new("e"), mint_new(42)); \
 	} while (0)
 
 #endif /* _T_MACROS_H */

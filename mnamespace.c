@@ -27,7 +27,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include "xobject.h"
+#include "mobject.h"
 #include "strlcat.h"
 #include "strstcpy.h"
 
@@ -36,14 +36,14 @@
 #define SIZE_T_MAX UINT_MAX
 #endif /* SIZE_T_MAX */
 
-#define XNAMESPACE_MAX_NAME_LENGTH		4096
-#define XNAMESPACE_MAX_ID_LENGTH		256
+#define MNAMESPACE_MAX_NAME_LENGTH		4096
+#define MNAMESPACE_MAX_ID_LENGTH		256
 
 static void
 format_err(size_t o, const char *loc, char *ebuf, size_t elen,
     const char *fmt, ...)
 {
-	char at[XNAMESPACE_MAX_NAME_LENGTH];
+	char at[MNAMESPACE_MAX_NAME_LENGTH];
 	va_list args;
 
 	if (ebuf == NULL || elen == 0)
@@ -97,16 +97,16 @@ array_ndx(char *s, size_t *alen, size_t *skip, char **errp)
 
 /* XXX this really needs meaningful return codes */
 int
-xnamespace_lookup(struct xobject *ns, char *location, struct xobject **obj,
+xnamespace_lookup(struct mobject *ns, char *location, struct mobject **obj,
     char *ebuf, size_t elen)
 {
-	struct xobject *current = ns;
-	struct xobject *next;
-	char name[XNAMESPACE_MAX_ID_LENGTH];
+	struct mobject *current = ns;
+	struct mobject *next;
+	char name[MNAMESPACE_MAX_ID_LENGTH];
 	char type, *cp;
 	size_t l, o = 0, ndx;
 
-	if (xobject_type(ns) != TYPE_XDICT) {
+	if (mobject_type(ns) != TYPE_MDICT) {
 		format_err(o, location, ebuf, elen,
 		    "Namespace is not of dictionary type");
 		return -1;
@@ -132,7 +132,7 @@ xnamespace_lookup(struct xobject *ns, char *location, struct xobject **obj,
 			return -1;
 		}
 
-		if ((next = xdict_item_s(current, name)) == NULL) {
+		if ((next = mdict_item_s(current, name)) == NULL) {
 			format_err(o, location, ebuf, elen,
 			    "Name \"%s\" not found", name);
 			return -1;
@@ -143,14 +143,14 @@ xnamespace_lookup(struct xobject *ns, char *location, struct xobject **obj,
 		if (type == '\0') {
 			break;
 		} else if (type == '.') {
-			if (xobject_type(next) != TYPE_XDICT) {
+			if (mobject_type(next) != TYPE_MDICT) {
 				format_err(o, location, ebuf, elen,
 				    "Name \"%s\" is not a dictionary", name);
 				return -1;
 			}
 			current = next;
 		} else if (type == '[') {
-			if (xobject_type(next) != TYPE_XARRAY) {
+			if (mobject_type(next) != TYPE_MARRAY) {
 				format_err(o, location, ebuf, elen,
 				    "Name \"%s\" is not an array", name);
 				return -1;
@@ -162,12 +162,12 @@ xnamespace_lookup(struct xobject *ns, char *location, struct xobject **obj,
 				return -1;
 			}
 			o += l;
-			if (ndx >= xarray_len(next)) {
+			if (ndx >= marray_len(next)) {
 				format_err(o, location, ebuf, elen,
 				    "Array index is out of bounds");
 				return -1;
 			}			
-			next = xarray_item(next, ndx);
+			next = marray_item(next, ndx);
 			goto resolve_next;
 		} else {
 			format_err(o, location, ebuf, elen, "Parse error");
@@ -181,17 +181,17 @@ xnamespace_lookup(struct xobject *ns, char *location, struct xobject **obj,
 }
 
 static int
-xalloc_by_typechar(int typechar, struct xobject **xop, char **namep)
+xalloc_by_typechar(int typechar, struct mobject **xop, char **namep)
 {
 	switch (typechar) {
 	case '.':
-		if ((*xop = xdict_new()) == NULL) {
+		if ((*xop = mdict_new()) == NULL) {
 			*namep = "Allocation of dictionary failed";
 			return -1;
 		}
 		return 0;
 	case '[':
-		if ((*xop = xarray_new()) == NULL) {
+		if ((*xop = marray_new()) == NULL) {
 			*namep = "Allocation of array failed";
 			return -1;
 		}
@@ -205,16 +205,16 @@ xalloc_by_typechar(int typechar, struct xobject **xop, char **namep)
 /* XXX this really needs meaningful return codes */
 /* XXX O gorgon! this is ugly code */
 int
-xnamespace_set(struct xobject *ns, char *location, struct xobject *obj,
+xnamespace_set(struct mobject *ns, char *location, struct mobject *obj,
     char *ebuf, size_t elen)
 {
-	struct xobject *current = ns;
-	struct xobject *next, *n2;
-	char name[XNAMESPACE_MAX_ID_LENGTH];
+	struct mobject *current = ns;
+	struct mobject *next, *n2;
+	char name[MNAMESPACE_MAX_ID_LENGTH];
 	char type, *cp;
 	size_t ndx, l, o = 0;
 
-	if (xobject_type(ns) != TYPE_XDICT) {
+	if (mobject_type(ns) != TYPE_MDICT) {
 		format_err(o, location, ebuf, elen,
 		    "Namespace is not of dictionary type");
 		return -1;
@@ -237,16 +237,16 @@ xnamespace_set(struct xobject *ns, char *location, struct xobject *obj,
 			    "Name \"%.8s...\" too long", name);
 			return -1;
 		}
-		next = xdict_item_s(current, name);
+		next = mdict_item_s(current, name);
 		o += l;
 		type = *(location + o++);
  next_array:
 
 		/* We are at the end of the string, insert the object here */
 		if (type == '\0') {
-			if (xdict_replace_s(current, name, obj) == -1) {
+			if (mdict_replace_s(current, name, obj) == -1) {
 				format_err(o, location, ebuf, elen,
-					"xdict_insert_s failed");
+					"mdict_insert_s failed");
 				return -1;
 			}
 			return 0;
@@ -258,9 +258,9 @@ xnamespace_set(struct xobject *ns, char *location, struct xobject *obj,
 				format_err(o, location, ebuf, elen, "%s", cp);
 				return -1;
 			}
-			if (xdict_replace_s(current, name, next) == -1) {
+			if (mdict_replace_s(current, name, next) == -1) {
 				format_err(o, location, ebuf, elen,
-				    "xdict_insert_s failed");
+				    "mdict_insert_s failed");
 				return -1;
 			}
 			/* Continue processing below */
@@ -268,7 +268,7 @@ xnamespace_set(struct xobject *ns, char *location, struct xobject *obj,
 
  next_is_dict:
 		if (type == '.') {
-			if (xobject_type(next) != TYPE_XDICT) {
+			if (mobject_type(next) != TYPE_MDICT) {
 				format_err(o, location, ebuf, elen,
 				    "\"%s\" is not a dictionary", name);
 				return -1;
@@ -288,7 +288,7 @@ xnamespace_set(struct xobject *ns, char *location, struct xobject *obj,
 			return -1;
 		}
 		o += l;
-		if (xobject_type(next) != TYPE_XARRAY) {
+		if (mobject_type(next) != TYPE_MARRAY) {
 			format_err(o, location, ebuf, elen,
 			    "\"%s\" is not an array", name);
 			return -1;
@@ -299,14 +299,14 @@ xnamespace_set(struct xobject *ns, char *location, struct xobject *obj,
 			 * We are at the end of the string, so
 			 * insert the object here.
 			 */
-			if (xarray_set(next, ndx, obj) == -1) {
+			if (marray_set(next, ndx, obj) == -1) {
 				format_err(o, location, ebuf, elen,
-				    "xarray_set failed");
+				    "marray_set failed");
 				return -1;
 			}
 			return 0;
 		}
-		if ((n2 = xarray_item(next, ndx)) == NULL) {
+		if ((n2 = marray_item(next, ndx)) == NULL) {
 			/*
 			 * If the entry doesn't exist yet in the array,
 			 * create and insert it. We need to look ahead to
@@ -316,9 +316,9 @@ xnamespace_set(struct xobject *ns, char *location, struct xobject *obj,
 				format_err(o, location, ebuf, elen, "%s", cp);
 				return -1;
 			}
-			if (xarray_set(next, ndx, n2) == -1) {
+			if (marray_set(next, ndx, n2) == -1) {
 				format_err(o, location, ebuf, elen,
-				"xdict_insert_s failed");
+				"mdict_insert_s failed");
 				return -1;
 			}
 		}

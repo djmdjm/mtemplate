@@ -29,7 +29,7 @@
 
 #include "sys-queue.h"
 #include "strlcpy.h"
-#include "xobject.h"
+#include "mobject.h"
 
 /* unbelievable that some systems lack this */
 #ifndef SIZE_T_MAX
@@ -38,109 +38,109 @@
 
 /*
  * Maximum number of entries in an array. NB. be careful - 
- * (XARRAY_MAX + 1 * sizeof(struct xobject *)) * 2 must be less than
+ * (MARRAY_MAX + 1 * sizeof(struct mobject *)) * 2 must be less than
  * SIZE_T_MAX to avoid int overflow
  */
-#define XARRAY_MAX	(1024 * 1024)
+#define MARRAY_MAX	(1024 * 1024)
 
 /* **** Private types **** */
 
 /* Generic stub */
-struct xobject {
-	enum xobject_type type;
+struct mobject {
+	enum mobject_type type;
 };
 
 /* "None" type */
-struct xnone {
-	enum xobject_type type; /* TYPE_XNONE */
+struct mnone {
+	enum mobject_type type; /* TYPE_MNONE */
 };
 
 /* String (bytes + len) type */
-struct xstring {
-	enum xobject_type type; /* TYPE_XSTRING */
+struct mstring {
+	enum mobject_type type; /* TYPE_MSTRING */
 	u_char *value;
 	size_t len;
 };
 
 /* Integer (signed, 64 bit) type */
-struct xint {
-	enum xobject_type type; /* TYPE_XINT */
+struct mint {
+	enum mobject_type type; /* TYPE_MINT */
 	int64_t value;
 };
 
 /* Array type */
-struct xarray {
-	enum xobject_type type; /* TYPE_XARRAY */
-	struct xobject **entries;
+struct marray {
+	enum mobject_type type; /* TYPE_MARRAY */
+	struct mobject **entries;
 	size_t nalloc;
 	size_t nused;
 };
 /* XXX: better data structure for sparse arrays here */
 
 /* Dictionary entry (not user visible) */
-struct xdict_entry {
-	struct xobject *key;
-	struct xobject *value;
-	TAILQ_ENTRY(xdict_entry) entry;
+struct mdict_entry {
+	struct mobject *key;
+	struct mobject *value;
+	TAILQ_ENTRY(mdict_entry) entry;
 };
-TAILQ_HEAD(xdict_entries, xdict_entry);
+TAILQ_HEAD(mdict_entries, mdict_entry);
 /* XXX: better data structure for dicts here (hash or RB tree) */
 
 /* Dictionary type */
-struct xdict {
-	enum xobject_type type; /* TYPE_XDICT */
+struct mdict {
+	enum mobject_type type; /* TYPE_MDICT */
 	size_t num_entries;
-	struct xdict_entries entries;
+	struct mdict_entries entries;
 };
 
 /* Generic iterator */
-struct xiterator {
-	struct xobject *object;
+struct miterator {
+	struct mobject *object;
 	u_int started;
-	struct xiteritem iteritem;
-	size_t array_ndx;		/* Only valid for TYPE_XARRAY */
-	struct xobject *array_last_key;	/* Only valid for TYPE_XARRAY */
-	struct xdict_entry *dict_ptr;	/* Only valid for TYPE_XDICT */
+	struct miteritem iteritem;
+	size_t array_ndx;		/* Only valid for TYPE_MARRAY */
+	struct mobject *array_last_key;	/* Only valid for TYPE_MARRAY */
+	struct mdict_entry *dict_ptr;	/* Only valid for TYPE_MDICT */
 };
 
-/* Single instance of xnone */
-static struct xnone *xnone_singleton = NULL;
+/* Single instance of mnone */
+static struct mnone *mnone_singleton = NULL;
 
-struct xobject *
-xnone_new(void)
+struct mobject *
+mnone_new(void)
 {
-	/* Keep a single instance of xnone */
+	/* Keep a single instance of mnone */
 	/* XXX: memprotect it */
-	if (xnone_singleton != NULL)
-		return (struct xobject *)xnone_singleton;
-	if ((xnone_singleton = calloc(1, sizeof(*xnone_singleton))) == NULL)
+	if (mnone_singleton != NULL)
+		return (struct mobject *)mnone_singleton;
+	if ((mnone_singleton = calloc(1, sizeof(*mnone_singleton))) == NULL)
 		return NULL;
-	xnone_singleton->type = TYPE_XNONE;
-	return (struct xobject *)xnone_singleton;
+	mnone_singleton->type = TYPE_MNONE;
+	return (struct mobject *)mnone_singleton;
 }
 
-struct xobject *
-xint_new(int64_t v)
+struct mobject *
+mint_new(int64_t v)
 {
-	struct xint *ret;
+	struct mint *ret;
 
 	if ((ret = calloc(1, sizeof(*ret))) == NULL)
 		return NULL;
-	ret->type = TYPE_XINT;
+	ret->type = TYPE_MINT;
 	ret->value = v;
-	return (struct xobject *)ret;
+	return (struct mobject *)ret;
 }
 
-struct xobject *
-xstring_new2(const u_char *value, size_t len)
+struct mobject *
+mstring_new2(const u_char *value, size_t len)
 {
-	struct xstring *ret;
+	struct mstring *ret;
 
 	if (len > SIZE_T_MAX - 1)
 		return NULL;
 	if ((ret = calloc(1, sizeof(*ret))) == NULL)
 		return NULL;
-	ret->type = TYPE_XSTRING;
+	ret->type = TYPE_MSTRING;
 	/*
 	 * Hack: allocate one extra byte and zero it so nul-terminated
 	 * string remain so
@@ -152,53 +152,53 @@ xstring_new2(const u_char *value, size_t len)
 	memcpy(ret->value, value, len);
 	ret->value[len] = '\0';
 	ret->len = len;
-	return (struct xobject *)ret;
+	return (struct mobject *)ret;
 }
 
-struct xobject *
-xstring_new(const u_char *value)
+struct mobject *
+mstring_new(const u_char *value)
 {
-	return (struct xobject *)xstring_new2(value, strlen(value));
+	return (struct mobject *)mstring_new2(value, strlen(value));
 }
 
-struct xobject *
-xarray_new(void)
+struct mobject *
+marray_new(void)
 {
-	struct xarray *ret;
+	struct marray *ret;
 
 	if ((ret = calloc(1, sizeof(*ret))) == NULL)
 		return NULL;
-	ret->type = TYPE_XARRAY;
+	ret->type = TYPE_MARRAY;
 	ret->entries = 0;
-	return (struct xobject *)ret;
+	return (struct mobject *)ret;
 }
 
-struct xobject *
-xdict_new(void)
+struct mobject *
+mdict_new(void)
 {
-	struct xdict *ret;
+	struct mdict *ret;
 
 	if ((ret = calloc(1, sizeof(*ret))) == NULL)
 		return NULL;
-	ret->type = TYPE_XDICT;
+	ret->type = TYPE_MDICT;
 	TAILQ_INIT(&ret->entries);
-	return (struct xobject *)ret;
+	return (struct mobject *)ret;
 }
 
-enum xobject_type
-xobject_type(const struct xobject *obj)
+enum mobject_type
+mobject_type(const struct mobject *obj)
 {
 	return obj->type;
 }
 
 static void
-xnone_free(const struct xnone *o)
+mnone_free(const struct mnone *o)
 {
-	/* Do nothing - xnone is a singleton */
+	/* Do nothing - mnone is a singleton */
 }
 
 static void
-xstring_free(struct xstring *o)
+mstring_free(struct mstring *o)
 {
 	if (o->value != NULL && o->len > 0) {
 		bzero(o->value, o->len);
@@ -209,24 +209,24 @@ xstring_free(struct xstring *o)
 }
 
 static void
-xint_free(struct xint *o)
+mint_free(struct mint *o)
 {
 	bzero(o, sizeof(*o));
 	free(o);
 }
 
 static void
-xarray_free(struct xarray *o)
+marray_free(struct marray *o)
 {
 	size_t i;
-	struct xobject *oi;
+	struct mobject *oi;
 
 	for (i = 0; i < o->nused; i++) {
 		oi = o->entries[i];
 		if (oi == NULL)
 			continue;
 		o->entries[i] = NULL;
-		xobject_free(oi);
+		mobject_free(oi);
 	}
 	free(o->entries);
 	bzero(o, sizeof(*o));
@@ -234,14 +234,14 @@ xarray_free(struct xarray *o)
 }
 
 static void
-xdict_free(struct xdict *o)
+mdict_free(struct mdict *o)
 {
-	struct xdict_entry *oe;
+	struct mdict_entry *oe;
 
 	while ((oe = TAILQ_FIRST(&o->entries)) != NULL) {
 		TAILQ_REMOVE(&o->entries, oe, entry);
-		xobject_free(oe->key);
-		xobject_free(oe->value);
+		mobject_free(oe->key);
+		mobject_free(oe->value);
 		bzero(oe, sizeof(*oe));
 		free(oe);
 	}
@@ -250,29 +250,29 @@ xdict_free(struct xdict *o)
 }
 
 void
-xobject_free(struct xobject *o)
+mobject_free(struct mobject *o)
 {
 	switch (o->type) {
-	case TYPE_XNONE:
-		xnone_free((struct xnone *)o);
+	case TYPE_MNONE:
+		mnone_free((struct mnone *)o);
 		break;
-	case TYPE_XSTRING:
-		xstring_free((struct xstring *)o);
+	case TYPE_MSTRING:
+		mstring_free((struct mstring *)o);
 		break;
-	case TYPE_XINT:
-		xint_free((struct xint *)o);
+	case TYPE_MINT:
+		mint_free((struct mint *)o);
 		break;
-	case TYPE_XARRAY:
-		xarray_free((struct xarray *)o);
+	case TYPE_MARRAY:
+		marray_free((struct marray *)o);
 		break;
-	case TYPE_XDICT:
-		xdict_free((struct xdict *)o);
+	case TYPE_MDICT:
+		mdict_free((struct mdict *)o);
 		break;
 	}
 }
 
 static size_t
-xstring_to_string(const struct xstring *o, u_char *s, size_t len)
+mstring_to_string(const struct mstring *o, u_char *s, size_t len)
 {
 	char vbuf[5], *ve;
 	size_t i, j, l, done = 0;
@@ -296,74 +296,74 @@ xstring_to_string(const struct xstring *o, u_char *s, size_t len)
 }
 
 size_t
-xobject_to_string(const struct xobject *o, u_char *s, size_t len)
+mobject_to_string(const struct mobject *o, u_char *s, size_t len)
 {
 	switch (o->type) {
-	case TYPE_XNONE:
+	case TYPE_MNONE:
 		return strlcpy(s, "None", len);
-	case TYPE_XSTRING:
-		return xstring_to_string((struct xstring *)o, s, len);
-	case TYPE_XINT:
-		return snprintf(s, len, "%lld", ((struct xint *)o)->value);
-	case TYPE_XARRAY:
-		return snprintf(s, len, "xarray(%p, %llu)", o,
-		    (unsigned long long)((struct xarray *)o)->nused);
-	case TYPE_XDICT:
-		return snprintf(s, len, "xdict(%p)", o);
+	case TYPE_MSTRING:
+		return mstring_to_string((struct mstring *)o, s, len);
+	case TYPE_MINT:
+		return snprintf(s, len, "%lld", ((struct mint *)o)->value);
+	case TYPE_MARRAY:
+		return snprintf(s, len, "marray(%p, %llu)", o,
+		    (unsigned long long)((struct marray *)o)->nused);
+	case TYPE_MDICT:
+		return snprintf(s, len, "mdict(%p)", o);
 	default:
 		return strlcpy(s, "Unsupported object type %d", o->type);
 	}
 }
 
-struct xobject *
-xobject_deepcopy(struct xobject *o)
+struct mobject *
+mobject_deepcopy(struct mobject *o)
 {
-	struct xobject *new_obj;
-	struct xobject *k, *v;
-	struct xiterator *iter;
-	struct xiteritem *item;
+	struct mobject *new_obj;
+	struct mobject *k, *v;
+	struct miterator *iter;
+	struct miteritem *item;
 	size_t n;
 
 	switch (o->type) {
-	case TYPE_XNONE:
-		return xnone_new();
-	case TYPE_XSTRING:
-		return xstring_new2(xstring_ptr(o), xstring_len(o));
-	case TYPE_XINT:
-		return xint_new(xint_value(o));
-	case TYPE_XARRAY:
-		if ((new_obj = xarray_new()) == NULL)
+	case TYPE_MNONE:
+		return mnone_new();
+	case TYPE_MSTRING:
+		return mstring_new2(mstring_ptr(o), mstring_len(o));
+	case TYPE_MINT:
+		return mint_new(mint_value(o));
+	case TYPE_MARRAY:
+		if ((new_obj = marray_new()) == NULL)
 			return NULL;
-		for (n = 0; n < xarray_len(o); n++) {
-			if ((v = xobject_deepcopy(xarray_item(o, n))) == NULL) {
-				xobject_free(new_obj);
+		for (n = 0; n < marray_len(o); n++) {
+			if ((v = mobject_deepcopy(marray_item(o, n))) == NULL) {
+				mobject_free(new_obj);
 				return NULL;
 			}
-			xarray_set(new_obj, n, v);
+			marray_set(new_obj, n, v);
 		}
 		return new_obj;
-	case TYPE_XDICT:
-		if ((new_obj = xdict_new()) == NULL)
+	case TYPE_MDICT:
+		if ((new_obj = mdict_new()) == NULL)
 			return NULL;
-		if ((iter = xobject_getiter(o)) == NULL) {
-			xobject_free(new_obj);
+		if ((iter = mobject_getiter(o)) == NULL) {
+			mobject_free(new_obj);
 			return NULL;
 		}
-		while ((item = xiterator_next(iter)) != NULL) {
-			if ((k = xobject_deepcopy(item->key)) == NULL) {
- xdict_deepcopy_err:
-				xobject_free(new_obj);
-				xiterator_free(iter);
+		while ((item = miterator_next(iter)) != NULL) {
+			if ((k = mobject_deepcopy(item->key)) == NULL) {
+ mdict_deepcopy_err:
+				mobject_free(new_obj);
+				miterator_free(iter);
 				return NULL;
 			}
-			if ((v = xobject_deepcopy(item->value)) == NULL) {
-				xobject_free(k);
-				goto xdict_deepcopy_err;
+			if ((v = mobject_deepcopy(item->value)) == NULL) {
+				mobject_free(k);
+				goto mdict_deepcopy_err;
 			}
-			if (xdict_insert(new_obj, k, v) != 0) {
-				xobject_free(k);
-				xobject_free(v);
-				goto xdict_deepcopy_err;
+			if (mdict_insert(new_obj, k, v) != 0) {
+				mobject_free(k);
+				mobject_free(v);
+				goto mdict_deepcopy_err;
 			}
 		}
 		return new_obj;
@@ -373,61 +373,61 @@ xobject_deepcopy(struct xobject *o)
 }
 
 int64_t
-xint_value(const struct xobject *_v)
+mint_value(const struct mobject *_v)
 {
-	struct xint *v = (struct xint *)_v;
+	struct mint *v = (struct mint *)_v;
 
-	if (v->type != TYPE_XINT)
+	if (v->type != TYPE_MINT)
 		return 0;
 	return v->value;
 }
 
 int
-xint_add(struct xobject *_v, int64_t n)
+mint_add(struct mobject *_v, int64_t n)
 {
-	struct xint *v = (struct xint *)_v;
+	struct mint *v = (struct mint *)_v;
 
-	if (v->type != TYPE_XINT)
+	if (v->type != TYPE_MINT)
 		return -1;
 	v->value += n;
 	return 0;
 }
 
 size_t
-xstring_len(const struct xobject *_s)
+mstring_len(const struct mobject *_s)
 {
-	struct xstring *s = (struct xstring *)_s;
+	struct mstring *s = (struct mstring *)_s;
 
-	if (s->type != TYPE_XSTRING)
+	if (s->type != TYPE_MSTRING)
 		return 0;
 	return s->len;
 }
 
 const u_char *
-xstring_ptr(const struct xobject *_s)
+mstring_ptr(const struct mobject *_s)
 {
-	struct xstring *s = (struct xstring *)_s;
+	struct mstring *s = (struct mstring *)_s;
 
-	if (s->type != TYPE_XSTRING)
+	if (s->type != TYPE_MSTRING)
 		return NULL;
 	return s->value;
 }
 
 static int
-xarray_resize(struct xarray *array, size_t want)
+marray_resize(struct marray *array, size_t want)
 {
-	struct xobject **tmp;
+	struct mobject **tmp;
 	size_t n, i;
 
 	if (want < array->nalloc)
 		return 0;
 	/*
 	 * Allocate the next power of two up.
-	 * NB. XARRAY_MAX must be sized to avoid integer overflow
+	 * NB. MARRAY_MAX must be sized to avoid integer overflow
 	 */
-	for (n = MAX(array->nalloc, 4); n < XARRAY_MAX && n <= want; n <<= 1)
+	for (n = MAX(array->nalloc, 4); n < MARRAY_MAX && n <= want; n <<= 1)
 		;
-	if (n >= XARRAY_MAX || n <= array->nused || n <= want)
+	if (n >= MARRAY_MAX || n <= array->nused || n <= want)
 		return -1;	
 	if ((tmp = realloc(array->entries, n * sizeof(*array->entries))) == NULL)
 		return -1;
@@ -440,13 +440,13 @@ xarray_resize(struct xarray *array, size_t want)
 }
 
 int
-xarray_prepend(struct xobject *_array, struct xobject *object)
+marray_prepend(struct mobject *_array, struct mobject *object)
 {
-	struct xarray *array = (struct xarray *)_array;
+	struct marray *array = (struct marray *)_array;
 
-	if (array->type != TYPE_XARRAY)
+	if (array->type != TYPE_MARRAY)
 		return -1;
-	if (xarray_resize(array, array->nused + 1) == -1)
+	if (marray_resize(array, array->nused + 1) == -1)
 		return -1;
 	memmove(array->entries + 1, array->entries,
 	    sizeof(*array->entries) * array->nused);
@@ -456,77 +456,77 @@ xarray_prepend(struct xobject *_array, struct xobject *object)
 }
 
 int
-xarray_append(struct xobject *_array, struct xobject *object)
+marray_append(struct mobject *_array, struct mobject *object)
 {
-	struct xarray *array = (struct xarray *)_array;
+	struct marray *array = (struct marray *)_array;
 
-	if (array->type != TYPE_XARRAY)
+	if (array->type != TYPE_MARRAY)
 		return -1;
-	if (xarray_resize(array, array->nused + 1) == -1)
+	if (marray_resize(array, array->nused + 1) == -1)
 		return -1;
 	array->entries[array->nused++] = object;
 	return 0;
 }
 
 int
-xarray_set(struct xobject *_array, size_t ndx, struct xobject *object)
+marray_set(struct mobject *_array, size_t ndx, struct mobject *object)
 {
-	struct xarray *array = (struct xarray *)_array;
+	struct marray *array = (struct marray *)_array;
 	size_t i;
 
-	if (array->type != TYPE_XARRAY)
+	if (array->type != TYPE_MARRAY)
 		return -1;
-	if (ndx >= XARRAY_MAX)
+	if (ndx >= MARRAY_MAX)
 		return -1;
-	if (xarray_resize(array, ndx + 1) == -1)
+	if (marray_resize(array, ndx + 1) == -1)
 		return -1;
 	/* Fill unallocated entries with None */
 	for (i = array->nused; i < ndx; i++)
-		array->entries[i] = (struct xobject *)xnone_new();
+		array->entries[i] = (struct mobject *)mnone_new();
 	if (array->entries[ndx] != NULL)
-		xobject_free(array->entries[ndx]);
+		mobject_free(array->entries[ndx]);
 	array->entries[ndx] = object;
 	array->nused = MAX(array->nused, ndx + 1);
 	return 0;
 }
 
 size_t
-xarray_len(struct xobject *_array)
+marray_len(struct mobject *_array)
 {
-	struct xarray *array = (struct xarray *)_array;
+	struct marray *array = (struct marray *)_array;
 
-	if (array->type != TYPE_XARRAY)
+	if (array->type != TYPE_MARRAY)
 		return 0;
 	return array->nused;
 }
 
-struct xobject *
-xarray_last(struct xobject *_array)
+struct mobject *
+marray_last(struct mobject *_array)
 {
-	struct xarray *array = (struct xarray *)_array;
+	struct marray *array = (struct marray *)_array;
 
-	if (array->type != TYPE_XARRAY)
+	if (array->type != TYPE_MARRAY)
 		return NULL;
 	return array->nused == 0 ? NULL : array->entries[array->nused - 1];
 }
 
-struct xobject *
-xarray_first(struct xobject *_array)
+struct mobject *
+marray_first(struct mobject *_array)
 {
-	struct xarray *array = (struct xarray *)_array;
+	struct marray *array = (struct marray *)_array;
 
-	if (array->type != TYPE_XARRAY)
+	if (array->type != TYPE_MARRAY)
 		return NULL;
 	return array->nused == 0 ? NULL : array->entries[0];
 }
 
-struct xobject *
-xarray_pop(struct xobject *_array)
+struct mobject *
+marray_pop(struct mobject *_array)
 {
-	struct xarray *array = (struct xarray *)_array;
-	struct xobject *ret;
+	struct marray *array = (struct marray *)_array;
+	struct mobject *ret;
 
-	if (array->type != TYPE_XARRAY)
+	if (array->type != TYPE_MARRAY)
 		return NULL;
 	if (array->nused == 0)
 		return NULL;
@@ -535,13 +535,13 @@ xarray_pop(struct xobject *_array)
 	return ret;
 }
 
-struct xobject *
-xarray_pull(struct xobject *_array)
+struct mobject *
+marray_pull(struct mobject *_array)
 {
-	struct xarray *array = (struct xarray *)_array;
-	struct xobject *ret;
+	struct marray *array = (struct marray *)_array;
+	struct mobject *ret;
 
-	if (array->type != TYPE_XARRAY)
+	if (array->type != TYPE_MARRAY)
 		return NULL;
 	if (array->nused == 0)
 		return NULL;
@@ -556,12 +556,12 @@ xarray_pull(struct xobject *_array)
 	return ret;
 }
 
-struct xobject *
-xarray_item(struct xobject *_array, size_t ndx)
+struct mobject *
+marray_item(struct mobject *_array, size_t ndx)
 {
-	struct xarray *array = (struct xarray *)_array;
+	struct marray *array = (struct marray *)_array;
 
-	if (array->type != TYPE_XARRAY)
+	if (array->type != TYPE_MARRAY)
 		return NULL;
 	if (ndx >= array->nused)
 		return NULL;
@@ -569,10 +569,10 @@ xarray_item(struct xobject *_array, size_t ndx)
 }
 
 static int
-xstring_cmp(const struct xobject *_a, const struct xobject *_b)
+mstring_cmp(const struct mobject *_a, const struct mobject *_b)
 {
-	struct xstring *a = (struct xstring *)_a;
-	struct xstring *b = (struct xstring *)_b;
+	struct mstring *a = (struct mstring *)_a;
+	struct mstring *b = (struct mstring *)_b;
 	int r;
 
 	if (a->len == 0 && b->len == 0)
@@ -590,35 +590,35 @@ xstring_cmp(const struct xobject *_a, const struct xobject *_b)
 	return 0;
 }
 
-struct xobject *
-xdict_item(const struct xobject *_dict, const struct xobject *key)
+struct mobject *
+mdict_item(const struct mobject *_dict, const struct mobject *key)
 {
-	struct xdict *dict = (struct xdict *)_dict;
-	struct xdict_entry *e;
+	struct mdict *dict = (struct mdict *)_dict;
+	struct mdict_entry *e;
 
-	if (dict->type != TYPE_XDICT || key->type != TYPE_XSTRING)
+	if (dict->type != TYPE_MDICT || key->type != TYPE_MSTRING)
 		return NULL;
 	TAILQ_FOREACH(e, &dict->entries, entry) {
-		if (xstring_cmp(e->key, key) == 0)
+		if (mstring_cmp(e->key, key) == 0)
 			return e->value;
 	}
 	return NULL;
 }
 
-struct xobject *
-xdict_remove(struct xobject *_dict, const struct xobject *key)
+struct mobject *
+mdict_remove(struct mobject *_dict, const struct mobject *key)
 {
-	struct xdict *dict = (struct xdict *)_dict;
-	struct xdict_entry *e;
-	struct xobject *ret;
+	struct mdict *dict = (struct mdict *)_dict;
+	struct mdict_entry *e;
+	struct mobject *ret;
 
-	if (dict->type != TYPE_XDICT || key->type != TYPE_XSTRING)
+	if (dict->type != TYPE_MDICT || key->type != TYPE_MSTRING)
 		return NULL;
 	TAILQ_FOREACH(e, &dict->entries, entry) {
-		if (xstring_cmp(e->key, key) == 0) {
+		if (mstring_cmp(e->key, key) == 0) {
 			TAILQ_REMOVE(&dict->entries, e, entry);
 			ret = e->value;
-			xobject_free((struct xobject *)e->key);
+			mobject_free((struct mobject *)e->key);
 			bzero(e, sizeof(*e));
 			free(e);
 			dict->num_entries--;
@@ -629,31 +629,31 @@ xdict_remove(struct xobject *_dict, const struct xobject *key)
 }
 
 int
-xdict_delete(struct xobject *_dict, const struct xobject *key)
+mdict_delete(struct mobject *_dict, const struct mobject *key)
 {
-	struct xdict *dict = (struct xdict *)_dict;
-	struct xobject *o;
+	struct mdict *dict = (struct mdict *)_dict;
+	struct mobject *o;
 
-	if (dict->type != TYPE_XDICT || key->type != TYPE_XSTRING)
+	if (dict->type != TYPE_MDICT || key->type != TYPE_MSTRING)
 		return -1;
-	if ((o = xdict_remove(_dict, key)) == NULL)
+	if ((o = mdict_remove(_dict, key)) == NULL)
 		return -1;
-	xobject_free(o);
+	mobject_free(o);
 	dict->num_entries--;
 	return 0;
 }
 
 int
-xdict_insert(struct xobject *_dict, struct xobject *key,
-    struct xobject *value)
+mdict_insert(struct mobject *_dict, struct mobject *key,
+    struct mobject *value)
 {
-	struct xdict *dict = (struct xdict *)_dict;
-	struct xdict_entry *e;
+	struct mdict *dict = (struct mdict *)_dict;
+	struct mdict_entry *e;
 
-	if (dict->type != TYPE_XDICT || key->type != TYPE_XSTRING)
+	if (dict->type != TYPE_MDICT || key->type != TYPE_MSTRING)
 		return -1;
 	TAILQ_FOREACH(e, &dict->entries, entry) {
-		if (xstring_cmp(e->key, key) == 0)
+		if (mstring_cmp(e->key, key) == 0)
 			return -1;
 	}
 	if ((e = calloc(1, sizeof(*e))) == NULL)
@@ -666,22 +666,22 @@ xdict_insert(struct xobject *_dict, struct xobject *key,
 }
 
 int
-xdict_replace(struct xobject *_dict, struct xobject *key,
-    struct xobject *value)
+mdict_replace(struct mobject *_dict, struct mobject *key,
+    struct mobject *value)
 {
-	struct xdict *dict = (struct xdict *)_dict;
-	struct xdict_entry *e;
+	struct mdict *dict = (struct mdict *)_dict;
+	struct mdict_entry *e;
 
-	if (dict->type != TYPE_XDICT || key->type != TYPE_XSTRING)
+	if (dict->type != TYPE_MDICT || key->type != TYPE_MSTRING)
 		return -1;
 	TAILQ_FOREACH(e, &dict->entries, entry) {
-		if (xstring_cmp(e->key, key) == 0)
+		if (mstring_cmp(e->key, key) == 0)
 			break;
 	}
 	if (e != TAILQ_END(&dict->entries)) {
 		TAILQ_REMOVE(&dict->entries, e, entry);
-		xobject_free((struct xobject *)e->key);
-		xobject_free(e->value);
+		mobject_free((struct mobject *)e->key);
+		mobject_free(e->value);
 		dict->num_entries--;
 	} else {
 		if ((e = calloc(1, sizeof(*e))) == NULL)
@@ -695,23 +695,23 @@ xdict_replace(struct xobject *_dict, struct xobject *key,
 }
 
 size_t
-xdict_len(const struct xobject *_dict)
+mdict_len(const struct mobject *_dict)
 {
-	struct xdict *dict = (struct xdict *)_dict;
+	struct mdict *dict = (struct mdict *)_dict;
 
-	if (dict->type != TYPE_XDICT)
+	if (dict->type != TYPE_MDICT)
 		return 0;
 	return dict->num_entries;
 }
 
-struct xiterator *
-xobject_getiter(struct xobject *obj)
+struct miterator *
+mobject_getiter(struct mobject *obj)
 {
-	struct xiterator *ret;
+	struct miterator *ret;
 
 	switch (obj->type) {
-	case TYPE_XARRAY:
-	case TYPE_XDICT:
+	case TYPE_MARRAY:
+	case TYPE_MDICT:
 		break;
 	default:
 		return NULL;
@@ -724,21 +724,21 @@ xobject_getiter(struct xobject *obj)
 }
 
 void
-xiterator_free(struct xiterator *iter)
+miterator_free(struct miterator *iter)
 {
 	if (iter->started && iter->object &&
-	    iter->object->type == TYPE_XARRAY &&
+	    iter->object->type == TYPE_MARRAY &&
 	    iter->array_last_key != NULL)
-		xobject_free(iter->array_last_key);
+		mobject_free(iter->array_last_key);
 	bzero(iter, sizeof(iter));
 	free(iter);
 }
 
-static struct xiteritem *
-xiterator_next_array(struct xiterator *iter)
+static struct miteritem *
+miterator_next_array(struct miterator *iter)
 {
-	struct xarray *array = (struct xarray *)(iter->object);
-	struct xobject *key;
+	struct marray *array = (struct marray *)(iter->object);
+	struct mobject *key;
 
 	if (!iter->started) {
 		iter->array_ndx = 0;
@@ -748,20 +748,20 @@ xiterator_next_array(struct xiterator *iter)
 	if (iter->array_ndx >= array->nused)
 		return NULL;
 	bzero(&iter->iteritem, sizeof(iter->iteritem));
-	if ((key = (struct xobject *)xint_new(iter->array_ndx)) == NULL)
+	if ((key = (struct mobject *)mint_new(iter->array_ndx)) == NULL)
 		return NULL;
 	if (iter->array_last_key != NULL)
-		xobject_free(iter->array_last_key);
+		mobject_free(iter->array_last_key);
 	iter->array_last_key = key;
 	iter->iteritem.key = key;
 	iter->iteritem.value = array->entries[iter->array_ndx++];
 	return &iter->iteritem;
 }
 
-static struct xiteritem *
-xiterator_next_dict(struct xiterator *iter)
+static struct miteritem *
+miterator_next_dict(struct miterator *iter)
 {
-	struct xdict *dict = (struct xdict *)(iter->object);
+	struct mdict *dict = (struct mdict *)(iter->object);
 	
 	if (!iter->started) {
 		iter->dict_ptr = TAILQ_FIRST(&dict->entries);
@@ -770,21 +770,21 @@ xiterator_next_dict(struct xiterator *iter)
 	if (iter->dict_ptr == TAILQ_END(&dict->entries))
 		return NULL;
 	bzero(&iter->iteritem, sizeof(iter->iteritem));
-	iter->iteritem.key = (struct xobject *)iter->dict_ptr->key;
+	iter->iteritem.key = (struct mobject *)iter->dict_ptr->key;
 	iter->iteritem.value = iter->dict_ptr->value;
 	iter->dict_ptr = TAILQ_NEXT(iter->dict_ptr, entry);
 	return &iter->iteritem;
 }
 
 
-struct xiteritem *
-xiterator_next(struct xiterator *iter)
+struct miteritem *
+miterator_next(struct miterator *iter)
 {
 	switch (iter->object->type) {
-	case TYPE_XARRAY:
-		return xiterator_next_array(iter);
-	case TYPE_XDICT:
-		return xiterator_next_dict(iter);
+	case TYPE_MARRAY:
+		return miterator_next_array(iter);
+	case TYPE_MDICT:
+		return miterator_next_dict(iter);
 	default:
 		return NULL;
 	}

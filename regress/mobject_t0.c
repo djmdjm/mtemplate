@@ -1,5 +1,5 @@
 /*
- * Regress test for xobject library
+ * Regress test for mobject library
  * Public domain -- Damien Miller <djm@mindrot.org> 2007-03-27
  */
 
@@ -13,21 +13,21 @@
 #include <string.h>
 #include <assert.h>
 
-#include "xobject.h"
+#include "mobject.h"
 
 #include "t_macros.h"
 
 int
 main(int argc, char **argv)
 {
-	struct xobject *xnone_obj, *xnone_obj2;
-	struct xobject *xint_obj;
-	struct xobject *xstring_obj, *k;
-	struct xobject *xarray_obj;
-	struct xobject *xdict_obj;
-	const struct xobject *o;
-	struct xobject *o2;
-	struct xiterator *it;
+	struct mobject *mnone_obj, *mnone_obj2;
+	struct mobject *mint_obj;
+	struct mobject *mstring_obj, *k;
+	struct mobject *marray_obj;
+	struct mobject *mdict_obj;
+	const struct mobject *o;
+	struct mobject *o2;
+	struct miterator *it;
 	char bin[10] = { 0x0, 0x1, 0xff, 'h', 'e', 'l', 'l', 'o', 0xf3, 0x0 };
 	u_int seen, n;
 
@@ -37,315 +37,315 @@ main(int argc, char **argv)
 	setvbuf(stdout, NULL, _IONBF, 0);
 	printf("t0:");
 
-	/* Case 1: smoke test xnone_new() */
-	xnone_obj = xnone_new();
-	assert(xnone_obj != NULL);
+	/* Case 1: smoke test mnone_new() */
+	mnone_obj = mnone_new();
+	assert(mnone_obj != NULL);
 	printf(".");
 
-	/* Case 2: smoke test xint_new */
-	xint_obj = xint_new(42);
-	assert(xint_obj != NULL);
+	/* Case 2: smoke test mint_new */
+	mint_obj = mint_new(42);
+	assert(mint_obj != NULL);
 	printf(".");
 
-	/* Case 3: smoke test xstring_new */
-	xstring_obj = xstring_new("hello, world");
-	assert(xstring_obj != NULL);
+	/* Case 3: smoke test mstring_new */
+	mstring_obj = mstring_new("hello, world");
+	assert(mstring_obj != NULL);
 	printf(".");
 
-	/* Case 4: smoke test xarray_new */
-	xarray_obj = xarray_new();
-	assert(xarray_obj != NULL);
+	/* Case 4: smoke test marray_new */
+	marray_obj = marray_new();
+	assert(marray_obj != NULL);
 	printf(".");
 
-	/* Case 4: smoke test xdict_new */
-	xdict_obj = xdict_new();
-	assert(xdict_obj != NULL);
+	/* Case 4: smoke test mdict_new */
+	mdict_obj = mdict_new();
+	assert(mdict_obj != NULL);
 	printf(".");
 
-	/* Case 5: smoke test xobject_free() */
-	xobject_free(xnone_obj);
-	xobject_free(xint_obj);
-	xobject_free(xstring_obj);
-	xobject_free(xarray_obj);
-	xobject_free(xdict_obj);
+	/* Case 5: smoke test mobject_free() */
+	mobject_free(mnone_obj);
+	mobject_free(mint_obj);
+	mobject_free(mstring_obj);
+	mobject_free(marray_obj);
+	mobject_free(mdict_obj);
 	printf(".");
 
-	/* Case 6: xnone_new() is singleton */
-	xnone_obj = xnone_new();
-	xnone_obj2 = xnone_new();
-	assert(xnone_obj != NULL);
-	assert(xnone_obj2 != NULL);
-	assert(xnone_obj == xnone_obj);
+	/* Case 6: mnone_new() is singleton */
+	mnone_obj = mnone_new();
+	mnone_obj2 = mnone_new();
+	assert(mnone_obj != NULL);
+	assert(mnone_obj2 != NULL);
+	assert(mnone_obj == mnone_obj);
 	printf(".");
 
-	/* Case 7: get value out of xint */
-	xint_obj = xint_new(42);
-	assert(xint_obj != NULL);
-	assert(xint_value(xint_obj) == 42);
+	/* Case 7: get value out of mint */
+	mint_obj = mint_new(42);
+	assert(mint_obj != NULL);
+	assert(mint_value(mint_obj) == 42);
 	printf(".");
 
-	/* Case 8: get value out of xstring */
-	xstring_obj = xstring_new("hello, world");
-	assert(xstring_obj != NULL);
-	assert(xstring_len(xstring_obj) == strlen("hello, world"));
-	assert(strcmp(xstring_ptr(xstring_obj), "hello, world") == 0);
+	/* Case 8: get value out of mstring */
+	mstring_obj = mstring_new("hello, world");
+	assert(mstring_obj != NULL);
+	assert(mstring_len(mstring_obj) == strlen("hello, world"));
+	assert(strcmp(mstring_ptr(mstring_obj), "hello, world") == 0);
 	printf(".");
 
-	xarray_obj = xarray_new();
-	assert(xarray_obj != NULL);
+	marray_obj = marray_new();
+	assert(marray_obj != NULL);
 
-	/* Case 9: xarray_pull on empty array */
-	assert(xarray_pull(xarray_obj) == NULL);
+	/* Case 9: marray_pull on empty array */
+	assert(marray_pull(marray_obj) == NULL);
 	printf(".");
 
-	/* Case 10: xarray_pop on empty array */
-	assert(xarray_pop(xarray_obj) == NULL);
+	/* Case 10: marray_pop on empty array */
+	assert(marray_pop(marray_obj) == NULL);
 	printf(".");
 
-	/* Case 11: xarray_item on empty array */
-	assert(xarray_item(xarray_obj, 0) == NULL);
-	assert(xarray_item(xarray_obj, 1) == NULL);
-	assert(xarray_item(xarray_obj, 4) == NULL);
+	/* Case 11: marray_item on empty array */
+	assert(marray_item(marray_obj, 0) == NULL);
+	assert(marray_item(marray_obj, 1) == NULL);
+	assert(marray_item(marray_obj, 4) == NULL);
 	printf(".");
 
-	/* Case 11: xarray_len on empty array */
-	assert(xarray_len(xarray_obj) == 0);
+	/* Case 11: marray_len on empty array */
+	assert(marray_len(marray_obj) == 0);
 	printf(".");
 
-	/* Case 12: xarray_append */
-	assert(xarray_append(xarray_obj, xnone_obj) == 0);
-	assert(xarray_append(xarray_obj, xint_obj) == 0);
-	assert(xarray_append(xarray_obj, xstring_obj) == 0);
+	/* Case 12: marray_append */
+	assert(marray_append(marray_obj, mnone_obj) == 0);
+	assert(marray_append(marray_obj, mint_obj) == 0);
+	assert(marray_append(marray_obj, mstring_obj) == 0);
 	printf(".");
 
-	/* Case 13: xarray_len */
-	assert(xarray_len(xarray_obj) == 3);
+	/* Case 13: marray_len */
+	assert(marray_len(marray_obj) == 3);
 	printf(".");
 
-	/* Case 14: xarray_item */
-	assert(xarray_item(xarray_obj, 0) == xnone_obj);
-	assert(xarray_item(xarray_obj, 1) == xint_obj);
-	assert(xarray_item(xarray_obj, 2) == xstring_obj);
-	assert(xarray_item(xarray_obj, 3) == NULL);
-	assert(xarray_item(xarray_obj, 4) == NULL);
+	/* Case 14: marray_item */
+	assert(marray_item(marray_obj, 0) == mnone_obj);
+	assert(marray_item(marray_obj, 1) == mint_obj);
+	assert(marray_item(marray_obj, 2) == mstring_obj);
+	assert(marray_item(marray_obj, 3) == NULL);
+	assert(marray_item(marray_obj, 4) == NULL);
 	printf(".");
 
-	/* Case 15: xarray_first */
-	assert(xarray_first(xarray_obj) == xnone_obj);
+	/* Case 15: marray_first */
+	assert(marray_first(marray_obj) == mnone_obj);
 	printf(".");
 
-	/* Case 16: xarray_last */
-	assert(xarray_last(xarray_obj) == xstring_obj);
+	/* Case 16: marray_last */
+	assert(marray_last(marray_obj) == mstring_obj);
 	printf(".");
 
-	/* Case 17: xarray_pull */
-	assert((o = xarray_pull(xarray_obj)) == xnone_obj);
-	assert((o = xarray_pull(xarray_obj)) == xint_obj);
-	assert((o = xarray_pull(xarray_obj)) == xstring_obj);
-	assert((o = xarray_pull(xarray_obj)) == NULL);
+	/* Case 17: marray_pull */
+	assert((o = marray_pull(marray_obj)) == mnone_obj);
+	assert((o = marray_pull(marray_obj)) == mint_obj);
+	assert((o = marray_pull(marray_obj)) == mstring_obj);
+	assert((o = marray_pull(marray_obj)) == NULL);
 	printf(".");
 
-	/* Case 18: xarray_len after emptying */
-	assert(xarray_len(xarray_obj) == 0);
+	/* Case 18: marray_len after emptying */
+	assert(marray_len(marray_obj) == 0);
 	printf(".");
 
-	/* Case 19: xarray_first after emptying */
-	assert(xarray_first(xarray_obj) == NULL);
+	/* Case 19: marray_first after emptying */
+	assert(marray_first(marray_obj) == NULL);
 	printf(".");
 
-	/* Case 20: xarray_last after emptying */
-	assert(xarray_last(xarray_obj) == NULL);
+	/* Case 20: marray_last after emptying */
+	assert(marray_last(marray_obj) == NULL);
 	printf(".");
 
-	/* Case 21: xarray_item after emptying */
-	assert(xarray_item(xarray_obj, 0) == NULL);
-	assert(xarray_item(xarray_obj, 1) == NULL);
-	assert(xarray_item(xarray_obj, 2) == NULL);
-	assert(xarray_item(xarray_obj, 64) == NULL);
-	assert(xarray_item(xarray_obj, 666) == NULL);
+	/* Case 21: marray_item after emptying */
+	assert(marray_item(marray_obj, 0) == NULL);
+	assert(marray_item(marray_obj, 1) == NULL);
+	assert(marray_item(marray_obj, 2) == NULL);
+	assert(marray_item(marray_obj, 64) == NULL);
+	assert(marray_item(marray_obj, 666) == NULL);
 	printf(".");
 
-	/* Case 22: xobject_free after emptying */
-	xobject_free(xarray_obj);
+	/* Case 22: mobject_free after emptying */
+	mobject_free(marray_obj);
 	printf(".");
 
-	xarray_obj = xarray_new();
-	assert(xarray_obj != NULL);
+	marray_obj = marray_new();
+	assert(marray_obj != NULL);
 
-	/* Case 23: xarray_prepend */
-	assert(xarray_prepend(xarray_obj, xnone_obj) == 0);
-	assert(xarray_prepend(xarray_obj, xint_obj) == 0);
-	assert(xarray_prepend(xarray_obj, xstring_obj) == 0);
-	assert(xarray_item(xarray_obj, 0) == xstring_obj);
-	assert(xarray_item(xarray_obj, 1) == xint_obj);
-	assert(xarray_item(xarray_obj, 2) == xnone_obj);
-	assert(xarray_item(xarray_obj, 3) == NULL);
-	assert(xarray_item(xarray_obj, 4) == NULL);
+	/* Case 23: marray_prepend */
+	assert(marray_prepend(marray_obj, mnone_obj) == 0);
+	assert(marray_prepend(marray_obj, mint_obj) == 0);
+	assert(marray_prepend(marray_obj, mstring_obj) == 0);
+	assert(marray_item(marray_obj, 0) == mstring_obj);
+	assert(marray_item(marray_obj, 1) == mint_obj);
+	assert(marray_item(marray_obj, 2) == mnone_obj);
+	assert(marray_item(marray_obj, 3) == NULL);
+	assert(marray_item(marray_obj, 4) == NULL);
 	printf(".");
 
-	/* Case 24: xobject_free while full */
-	xobject_free(xarray_obj);
+	/* Case 24: mobject_free while full */
+	mobject_free(marray_obj);
 	printf(".");
 
-	/* Case 25: mixed xarray_append and xarray_prepend */
-	xarray_obj = xarray_new();
-	assert(xarray_prepend(xarray_obj, xnone_new()) == 0);
+	/* Case 25: mixed marray_append and marray_prepend */
+	marray_obj = marray_new();
+	assert(marray_prepend(marray_obj, mnone_new()) == 0);
 	/* { None } */
-	assert(xarray_prepend(xarray_obj, xint_new(1)) == 0);
+	assert(marray_prepend(marray_obj, mint_new(1)) == 0);
 	/* { 1, None } */
-	assert(xarray_append(xarray_obj, xint_new(2)) == 0);
+	assert(marray_append(marray_obj, mint_new(2)) == 0);
 	/* { 1, None, 2 } */
-	assert(xarray_prepend(xarray_obj, xstring_new("abc")) == 0);
+	assert(marray_prepend(marray_obj, mstring_new("abc")) == 0);
 	/* { "abc", 1, None, 2 } */
-	assert(xarray_append(xarray_obj, xstring_new("def")) == 0);
+	assert(marray_append(marray_obj, mstring_new("def")) == 0);
 	/* { "abc", 1, None, 2, "def" } */
-	assert(xarray_append(xarray_obj, xstring_new("hij")) == 0);
+	assert(marray_append(marray_obj, mstring_new("hij")) == 0);
 	/* { "abc", 1, None, 2, "def", "hij" } */
-	assert(xarray_prepend(xarray_obj, xstring_new("klm")) == 0);
+	assert(marray_prepend(marray_obj, mstring_new("klm")) == 0);
 	/* { "klm", "abc", 1, None, 2, "def", "hij" } */
-	assert(xarray_prepend(xarray_obj, xint_new(3)) == 0);
+	assert(marray_prepend(marray_obj, mint_new(3)) == 0);
 	/* { 3, "klm", "abc", 1, None, 2, "def", "hij" } */
-	assert(xarray_prepend(xarray_obj, xint_new(4)) == 0);
+	assert(marray_prepend(marray_obj, mint_new(4)) == 0);
 	/* { 4, 3, "klm", "abc", 1, None, 2, "def", "hij" } */
-	assert(xarray_append(xarray_obj, xnone_new()) == 0);
+	assert(marray_append(marray_obj, mnone_new()) == 0);
 	/* { 4, 3, "klm", "abc", 1, None, 2, "def", "hij", None } */
-	assert(xarray_prepend(xarray_obj, xstring_new("pqr")) == 0);
+	assert(marray_prepend(marray_obj, mstring_new("pqr")) == 0);
 	/* { "pqr", 4, 3, "klm", "abc", 1, None, 2, "def", "hij", None } */
 
-	X_STRING_AT_ARRAY(xarray_obj, 0, "pqr");
-	X_INT_AT_ARRAY(xarray_obj, 1, 4);
-	X_INT_AT_ARRAY(xarray_obj, 2, 3);
-	X_STRING_AT_ARRAY(xarray_obj, 3, "klm");
-	X_STRING_AT_ARRAY(xarray_obj, 4, "abc");
-	X_INT_AT_ARRAY(xarray_obj, 5, 1);
-	X_NONE_AT_ARRAY(xarray_obj, 6);
-	X_INT_AT_ARRAY(xarray_obj, 7, 2);
-	X_STRING_AT_ARRAY(xarray_obj, 8, "def");
-	X_STRING_AT_ARRAY(xarray_obj, 9, "hij");
-	X_NONE_AT_ARRAY(xarray_obj, 10);
-	assert((o = xarray_item(xarray_obj, 11)) == NULL);
-	assert((o = xarray_item(xarray_obj, 12)) == NULL);
-	assert((o = xarray_item(xarray_obj, 666)) == NULL);
+	X_STRING_AT_ARRAY(marray_obj, 0, "pqr");
+	X_INT_AT_ARRAY(marray_obj, 1, 4);
+	X_INT_AT_ARRAY(marray_obj, 2, 3);
+	X_STRING_AT_ARRAY(marray_obj, 3, "klm");
+	X_STRING_AT_ARRAY(marray_obj, 4, "abc");
+	X_INT_AT_ARRAY(marray_obj, 5, 1);
+	X_NONE_AT_ARRAY(marray_obj, 6);
+	X_INT_AT_ARRAY(marray_obj, 7, 2);
+	X_STRING_AT_ARRAY(marray_obj, 8, "def");
+	X_STRING_AT_ARRAY(marray_obj, 9, "hij");
+	X_NONE_AT_ARRAY(marray_obj, 10);
+	assert((o = marray_item(marray_obj, 11)) == NULL);
+	assert((o = marray_item(marray_obj, 12)) == NULL);
+	assert((o = marray_item(marray_obj, 666)) == NULL);
 	printf(".");
 
-	/* Case 26: xarray_pop */
+	/* Case 26: marray_pop */
 	/* Note - order is reversed */
-	X_NONE_POP_ARRAY(xarray_obj);
-	X_STRING_POP_ARRAY(xarray_obj, "hij");
-	X_STRING_POP_ARRAY(xarray_obj, "def");
-	X_INT_POP_ARRAY(xarray_obj, 2);
-	X_NONE_POP_ARRAY(xarray_obj);
-	X_INT_POP_ARRAY(xarray_obj, 1);
-	X_STRING_POP_ARRAY(xarray_obj, "abc");
-	X_STRING_POP_ARRAY(xarray_obj, "klm");
-	X_INT_POP_ARRAY(xarray_obj, 3);
-	X_INT_POP_ARRAY(xarray_obj, 4);
-	X_STRING_POP_ARRAY(xarray_obj, "pqr");
-	assert((o = xarray_pop(xarray_obj)) == NULL);
-	assert((o = xarray_pop(xarray_obj)) == NULL);
+	X_NONE_POP_ARRAY(marray_obj);
+	X_STRING_POP_ARRAY(marray_obj, "hij");
+	X_STRING_POP_ARRAY(marray_obj, "def");
+	X_INT_POP_ARRAY(marray_obj, 2);
+	X_NONE_POP_ARRAY(marray_obj);
+	X_INT_POP_ARRAY(marray_obj, 1);
+	X_STRING_POP_ARRAY(marray_obj, "abc");
+	X_STRING_POP_ARRAY(marray_obj, "klm");
+	X_INT_POP_ARRAY(marray_obj, 3);
+	X_INT_POP_ARRAY(marray_obj, 4);
+	X_STRING_POP_ARRAY(marray_obj, "pqr");
+	assert((o = marray_pop(marray_obj)) == NULL);
+	assert((o = marray_pop(marray_obj)) == NULL);
 	printf(".");
 
-	xobject_free(xarray_obj);
+	mobject_free(marray_obj);
 
 	/* Case 27: store into dict */
-	xdict_obj = xdict_new();
-	assert(xdict_insert(xdict_obj, xstring_new("a"), xnone_new()) == 0);
-	assert(xdict_insert(xdict_obj, xstring_new("b"),
-	    xstring_new("abc")) == 0);
-	assert(xdict_insert(xdict_obj, xstring_new("c"),
-	    xstring_new("def")) == 0);
-	assert(xdict_insert(xdict_obj, xstring_new("d"),
-	    xstring_new("ghi")) == 0);
-	assert(xdict_insert(xdict_obj, xstring_new("e"), xint_new(-64)) == 0);
-	assert(xdict_insert(xdict_obj, xstring_new("f"), xint_new(42)) == 0);
-	assert(xdict_insert(xdict_obj, (k = xstring_new("a")),
-	    (o2 = xint_new(666))) == -1);
-	xobject_free(k);
-	xobject_free(o2);
+	mdict_obj = mdict_new();
+	assert(mdict_insert(mdict_obj, mstring_new("a"), mnone_new()) == 0);
+	assert(mdict_insert(mdict_obj, mstring_new("b"),
+	    mstring_new("abc")) == 0);
+	assert(mdict_insert(mdict_obj, mstring_new("c"),
+	    mstring_new("def")) == 0);
+	assert(mdict_insert(mdict_obj, mstring_new("d"),
+	    mstring_new("ghi")) == 0);
+	assert(mdict_insert(mdict_obj, mstring_new("e"), mint_new(-64)) == 0);
+	assert(mdict_insert(mdict_obj, mstring_new("f"), mint_new(42)) == 0);
+	assert(mdict_insert(mdict_obj, (k = mstring_new("a")),
+	    (o2 = mint_new(666))) == -1);
+	mobject_free(k);
+	mobject_free(o2);
 	printf(".");
 
-	/* Case 28: xdict_len after insert */
-	assert(xdict_len(xdict_obj) == 6);
+	/* Case 28: mdict_len after insert */
+	assert(mdict_len(mdict_obj) == 6);
 	printf(".");
 
 	/* Case 29: retrieve from dict */
-	X_NONE_AT_DICT(xdict_obj, "a");
-	X_STRING_AT_DICT(xdict_obj, "b", "abc");
-	X_STRING_AT_DICT(xdict_obj, "c", "def");
-	X_STRING_AT_DICT(xdict_obj, "d", "ghi");
-	X_INT_AT_DICT(xdict_obj, "e", -64);
-	X_INT_AT_DICT(xdict_obj, "f", 42);
-	X_NULL_AT_DICT(xdict_obj, "x");
+	X_NONE_AT_DICT(mdict_obj, "a");
+	X_STRING_AT_DICT(mdict_obj, "b", "abc");
+	X_STRING_AT_DICT(mdict_obj, "c", "def");
+	X_STRING_AT_DICT(mdict_obj, "d", "ghi");
+	X_INT_AT_DICT(mdict_obj, "e", -64);
+	X_INT_AT_DICT(mdict_obj, "f", 42);
+	X_NULL_AT_DICT(mdict_obj, "x");
 	printf(".");
 
 	/* Case 30: replace in dict */
-	assert(xdict_replace(xdict_obj, xstring_new("a"), xint_new(666)) == 0);
-	assert(xdict_replace(xdict_obj, xstring_new("x"), xnone_new()) == 0);
-	X_INT_AT_DICT(xdict_obj, "a", 666);
-	X_NONE_AT_DICT(xdict_obj, "x");
+	assert(mdict_replace(mdict_obj, mstring_new("a"), mint_new(666)) == 0);
+	assert(mdict_replace(mdict_obj, mstring_new("x"), mnone_new()) == 0);
+	X_INT_AT_DICT(mdict_obj, "a", 666);
+	X_NONE_AT_DICT(mdict_obj, "x");
 	printf(".");
 
-	/* Case 31: xdict_len after replace */
-	assert(xdict_len(xdict_obj) == 7);
+	/* Case 31: mdict_len after replace */
+	assert(mdict_len(mdict_obj) == 7);
 	printf(".");
 
 	/* Case 32: remove from dict */
-	assert((o2 = xdict_remove(xdict_obj,
-	    (k = xstring_new("c")))) != NULL);
-	xobject_free(k);
-	assert(xobject_type(o2) == TYPE_XSTRING);
-	assert(strcmp(xstring_ptr(o2), "def") == 0);
-	xobject_free(o2);
-	assert((o2 = xdict_remove(xdict_obj,
-	    (k = xstring_new("e")))) != NULL);
-	xobject_free(k);
-	assert(xint_value(o2) == -64);
-	xobject_free(o2);
-	assert((o2 = xdict_remove(xdict_obj, 
-	    (k = xstring_new("z")))) == NULL);
-	xobject_free(k);
-	X_NULL_AT_DICT(xdict_obj, "c");
-	X_NULL_AT_DICT(xdict_obj, "e");
-	X_NULL_AT_DICT(xdict_obj, "z");
+	assert((o2 = mdict_remove(mdict_obj,
+	    (k = mstring_new("c")))) != NULL);
+	mobject_free(k);
+	assert(mobject_type(o2) == TYPE_MSTRING);
+	assert(strcmp(mstring_ptr(o2), "def") == 0);
+	mobject_free(o2);
+	assert((o2 = mdict_remove(mdict_obj,
+	    (k = mstring_new("e")))) != NULL);
+	mobject_free(k);
+	assert(mint_value(o2) == -64);
+	mobject_free(o2);
+	assert((o2 = mdict_remove(mdict_obj, 
+	    (k = mstring_new("z")))) == NULL);
+	mobject_free(k);
+	X_NULL_AT_DICT(mdict_obj, "c");
+	X_NULL_AT_DICT(mdict_obj, "e");
+	X_NULL_AT_DICT(mdict_obj, "z");
 	printf(".");
 
-	/* Case 33: xdict_len after remove */
-	assert(xdict_len(xdict_obj) == 5);
+	/* Case 33: mdict_len after remove */
+	assert(mdict_len(mdict_obj) == 5);
 	printf(".");
 
 	/* Case 34: free populated dict */
-	xobject_free(xdict_obj);
+	mobject_free(mdict_obj);
 	printf(".");
 
-	/* Case 35: xobject_to_string */
-	xstring_obj = xstring_new("hello, world");
-	xint_obj = xint_new(42);
-	xnone_obj = xnone_new();
-	xarray_obj = xarray_new();
-	xdict_obj = xdict_new();
-	T_XOTS(xstring_obj, "hello, world");
-	T_XOTS(xint_obj, "42");
-	T_XOTS(xnone_obj, "None");
-	T_XOTS_PRE(xarray_obj, "xarray(");
-	T_XOTS_PRE(xdict_obj, "xdict(");
-	xobject_free(xstring_obj);
-	xobject_free(xint_obj);
-	xobject_free(xnone_obj);
-	xobject_free(xarray_obj);
-	xobject_free(xdict_obj);
+	/* Case 35: mobject_to_string */
+	mstring_obj = mstring_new("hello, world");
+	mint_obj = mint_new(42);
+	mnone_obj = mnone_new();
+	marray_obj = marray_new();
+	mdict_obj = mdict_new();
+	T_XOTS(mstring_obj, "hello, world");
+	T_XOTS(mint_obj, "42");
+	T_XOTS(mnone_obj, "None");
+	T_XOTS_PRE(marray_obj, "marray(");
+	T_XOTS_PRE(mdict_obj, "mdict(");
+	mobject_free(mstring_obj);
+	mobject_free(mint_obj);
+	mobject_free(mnone_obj);
+	mobject_free(marray_obj);
+	mobject_free(mdict_obj);
 	printf(".");
 
-	/* Case 36: xobject_to_string with non-ASCII chars */
-	xstring_obj = xstring_new2(bin, sizeof(bin));
-	T_XOTS(xstring_obj, "\\000\\001\\377hello\\363\\000");
-	xobject_free(xstring_obj);
+	/* Case 36: mobject_to_string with non-ASCII chars */
+	mstring_obj = mstring_new2(bin, sizeof(bin));
+	T_XOTS(mstring_obj, "\\000\\001\\377hello\\363\\000");
+	mobject_free(mstring_obj);
 	printf(".");
 
 	/* Case 37: array iterator */
-	X_ARRAY_FILL(xarray_obj);
+	X_ARRAY_FILL(marray_obj);
 	/* { "pqr", 4, 3, "klm", "abc", 1, None, 2, "def", "hij", None } */
 
-	assert((it = xobject_getiter(xarray_obj)) != NULL);
+	assert((it = mobject_getiter(marray_obj)) != NULL);
 	X_STRING_ARRAY_ITER(it, 0, "pqr");
 	X_INT_ARRAY_ITER(it, 1, 4);
 	X_INT_ARRAY_ITER(it, 2, 3);
@@ -362,60 +362,60 @@ main(int argc, char **argv)
 	printf(".");
 
 	/* Case 38: free iterator after array traversal */
-	xiterator_free(it);
+	miterator_free(it);
 	printf(".");
 
 	/* Case 39: free iterator midway through array traversal */
-	assert((it = xobject_getiter(xarray_obj)) != NULL);
+	assert((it = mobject_getiter(marray_obj)) != NULL);
 	X_STRING_ARRAY_ITER(it, 0, "pqr");
 	X_INT_ARRAY_ITER(it, 1, 4);
 	X_INT_ARRAY_ITER(it, 2, 3);
 	X_STRING_ARRAY_ITER(it, 3, "klm");
 	X_STRING_ARRAY_ITER(it, 4, "abc");
-	xiterator_free(it);
+	miterator_free(it);
 	printf(".");
 
-	xobject_free(xarray_obj);
+	mobject_free(marray_obj);
 
 	/* Case 40: dict iterator */
-	X_DICT_FILL(xdict_obj);
+	X_DICT_FILL(mdict_obj);
 	/* { "a" : None, "b" : "abc", c : "def", d : -64, e : 42 } */
 	/*
 	 * This is a little more painful, as dict iteration doesn't
 	 * guarantee an order
 	 */
 	seen = 31;
-	assert((it = xobject_getiter(xdict_obj)) != NULL);
+	assert((it = mobject_getiter(mdict_obj)) != NULL);
 	for (n = 0; n < 5; n++) {
-		const struct xiteritem *ii;
+		const struct miteritem *ii;
 		int kn;
-		assert((ii = xiterator_next(it)) != NULL);
-		assert(xobject_type(ii->key) == TYPE_XSTRING);
-		assert(xstring_len(ii->key) == 1);
-		kn = xstring_ptr(ii->key)[0];
+		assert((ii = miterator_next(it)) != NULL);
+		assert(mobject_type(ii->key) == TYPE_MSTRING);
+		assert(mstring_len(ii->key) == 1);
+		kn = mstring_ptr(ii->key)[0];
 		assert((seen & (1 << (kn - 'a'))) != 0);
 		seen &= ~(1 << (kn - 'a'));
 		switch (kn) {
 		case 'a':
-			assert(xobject_type(ii->value) == TYPE_XNONE);
+			assert(mobject_type(ii->value) == TYPE_MNONE);
 			break;
 		case 'b':
-			assert(xobject_type(ii->value) == TYPE_XSTRING);
-			assert(strcmp(xstring_ptr(ii->value),
+			assert(mobject_type(ii->value) == TYPE_MSTRING);
+			assert(strcmp(mstring_ptr(ii->value),
 			    "abc") == 0);
 			break;
 		case 'c':
-			assert(xobject_type(ii->value) == TYPE_XSTRING);
-			assert(strcmp(xstring_ptr(ii->value),
+			assert(mobject_type(ii->value) == TYPE_MSTRING);
+			assert(strcmp(mstring_ptr(ii->value),
 			    "def") == 0);
 			break;
 		case 'd':
-			assert(xobject_type(ii->value) == TYPE_XINT);
-			assert(xint_value(ii->value) == -64);
+			assert(mobject_type(ii->value) == TYPE_MINT);
+			assert(mint_value(ii->value) == -64);
 			break;
 		case 'e':
-			assert(xobject_type(ii->value) == TYPE_XINT);
-			assert(xint_value(ii->value) == 42);
+			assert(mobject_type(ii->value) == TYPE_MINT);
+			assert(mint_value(ii->value) == 42);
 			break;
 		default:
 			assert(0);
@@ -424,32 +424,32 @@ main(int argc, char **argv)
 	assert(seen == 0);
 
 	/* Case 41: free iterator after dict traversal */
-	xiterator_free(it);
+	miterator_free(it);
 	printf(".");
 
-	xobject_free(xdict_obj);
+	mobject_free(mdict_obj);
 
-	/* Case 42: xarray_set and implicit filling */
-	assert((xarray_obj = xarray_new()) != NULL);
-	assert((xstring_obj = xstring_new2("happy", 3)) != NULL);
-	assert(xarray_set(xarray_obj, 5, xstring_obj) != -1);
-	assert((xstring_obj = xstring_new2("joyjoy", 2)) != NULL);
-	assert(xarray_set(xarray_obj, 3, xstring_obj) != -1);
-	assert((xstring_obj = xstring_new2("merry!", 5)) != NULL);
-	assert(xarray_set(xarray_obj, 3, xstring_obj) != -1);
-	assert(xarray_len(xarray_obj) == 6);
-	X_NONE_AT_ARRAY(xarray_obj, 0);
-	X_NONE_AT_ARRAY(xarray_obj, 1);
-	X_NONE_AT_ARRAY(xarray_obj, 2);
-	X_STRING_AT_ARRAY(xarray_obj, 3, "merry");
-	X_NONE_AT_ARRAY(xarray_obj, 4);
-	X_STRING_AT_ARRAY(xarray_obj, 5, "hap");
-	xobject_free(xarray_obj);
+	/* Case 42: marray_set and implicit filling */
+	assert((marray_obj = marray_new()) != NULL);
+	assert((mstring_obj = mstring_new2("happy", 3)) != NULL);
+	assert(marray_set(marray_obj, 5, mstring_obj) != -1);
+	assert((mstring_obj = mstring_new2("joyjoy", 2)) != NULL);
+	assert(marray_set(marray_obj, 3, mstring_obj) != -1);
+	assert((mstring_obj = mstring_new2("merry!", 5)) != NULL);
+	assert(marray_set(marray_obj, 3, mstring_obj) != -1);
+	assert(marray_len(marray_obj) == 6);
+	X_NONE_AT_ARRAY(marray_obj, 0);
+	X_NONE_AT_ARRAY(marray_obj, 1);
+	X_NONE_AT_ARRAY(marray_obj, 2);
+	X_STRING_AT_ARRAY(marray_obj, 3, "merry");
+	X_NONE_AT_ARRAY(marray_obj, 4);
+	X_STRING_AT_ARRAY(marray_obj, 5, "hap");
+	mobject_free(marray_obj);
 	printf(".");
 
 	/* XXX check that functions do not accept inappropriate objects */
 	/* XXX concurrent iterations */
-	/* XXX xdict_*_s function */
+	/* XXX mdict_*_s function */
 
 	printf("\n");
 	return 0;

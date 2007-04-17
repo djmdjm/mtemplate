@@ -1,6 +1,11 @@
 20070417
  - (djm) Remove horrid casting: all public functions now work on struct
    xobject * alone, the other types are still used internally.
+ - (djm) Start rename and merge of projects formally known as xobject and
+   xtemplate into "libmtemplate". CVS repository files have been copied to
+   preserve history
+ - (djm) Rename xobject and co. to "mobject" (Google codesearch tells me that
+   this is a pretty clean namespace)
 
 20070415
  - (djm) Add xdict_len() function and regress tests for it
