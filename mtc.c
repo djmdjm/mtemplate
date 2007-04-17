@@ -16,7 +16,7 @@
 
 /* $Id$ */
 
-/* Simple xtemplate command line processor */
+/* Simple mtemplate command line processor */
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -30,8 +30,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "xtemplate.h"
-#include "xobject.h"
+#include "mtemplate.h"
+#include "mobject.h"
 
 static void
 usage(void)
@@ -41,11 +41,11 @@ usage(void)
 }
 
 static void
-define(struct xobject *namespace, const char *kv)
+define(struct mobject *namespace, const char *kv)
 {
 	const char *cp;
 	char kbuf[256], ebuf[512];
-	struct xobject *v;
+	struct mobject *v;
 
 	if ((cp = strchr(kv, '=')) == NULL || cp == kv || *(cp + 1) == '\0') {
 		warnx("Invalid define");
@@ -56,8 +56,8 @@ define(struct xobject *namespace, const char *kv)
 		errx(1, "Define key too long");
 	memcpy(kbuf, kv, cp - kv);
 	kbuf[cp - kv] = '\0';
-	if ((v = xstring_new(cp + 1)) == NULL)
-		errx(1, "xstring_new failed");
+	if ((v = mstring_new(cp + 1)) == NULL)
+		errx(1, "mstring_new failed");
 
 	if (xnamespace_set(namespace, kbuf, v, ebuf, sizeof(ebuf)) != 0)
 		errx(1, "xnamespace_set: %s", ebuf);
@@ -72,12 +72,12 @@ main(int argc, char **argv)
 	char *template, buf[8192];
 	const char *out_path = "-";
 	size_t tlen;
-	struct xtemplate *t;
-	struct xobject *namespace;
+	struct mtemplate *t;
+	struct mobject *namespace;
 	FILE *out;
 
-	if ((namespace = xdict_new()) == NULL)
-		errx(1, "xdict_new failed");
+	if ((namespace = mdict_new()) == NULL)
+		errx(1, "mdict_new failed");
 	while ((ch = getopt(argc, argv, "hD:o:")) != -1) {
 		switch (ch) {
 		case 'h':
@@ -131,16 +131,16 @@ main(int argc, char **argv)
 	}
 	close(tfd);
 
-	if ((t = xtemplate_parse(template, buf, sizeof(buf))) == NULL)
-		errx(1, "xtemplate_parse: %s", buf);
+	if ((t = mtemplate_parse(template, buf, sizeof(buf))) == NULL)
+		errx(1, "mtemplate_parse: %s", buf);
 
 	if (strcmp(out_path, "-") == 0)
 		out = stdout;
 	else if ((out = fopen(out_path, "w")) == NULL)
 		err(1, "fopen(\"%s\")", out_path);
 
-	if (xtemplate_run_stdio(t, namespace, out, buf, sizeof(buf)) == -1)
-		errx(1, "xtemplate_run: %s", buf);
+	if (mtemplate_run_stdio(t, namespace, out, buf, sizeof(buf)) == -1)
+		errx(1, "mtemplate_run: %s", buf);
 
 	fclose(out);
 

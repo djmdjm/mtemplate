@@ -1,9 +1,66 @@
-This is a simple generic type library for C, loosely modelled on Python.
-The fundamental types supported are "None", arrays, dictionaries 
-(string-keyed lookups), strings and integers. Types may be nested inside
-multi-valued types; e.g. arrays may contain other arrays as an element, 
-dictionaries may contain dictionaries of arrays, etc. The library also
-supports iteration over arrays and dictionaries.
+
+This is mtemplate, a very simple text templating system. It has been
+written for some small code generators (cfsm[1] in particular), but
+you might find it useful too.
+
+It is built on top of a simple generic type library for C (mobject),
+loosely modelled on Python. The fundamental types supported are "None",
+arrays, dictionaries (string-keyed lookups), strings and integers. Types
+may be nested inside multi-valued types; e.g. arrays may contain other
+arrays as an element, dictionaries may contain dictionaries of arrays,
+etc. The library also supports iteration over arrays and dictionaries.
+
+The template language is designed to be simple but useful. Template
+directives are enclosed in double curly braces, e.g. "{{else}}".
+Variable substitution is performed by placing the name of the variable in
+curly braces, for example "{{users.djm.history[5]}}". mtemplate uses the
+mobject namespace functions for variable substitutions - the syntax is
+similar to that of Python or Javascript.
+
+The directive opening sequence itself can be inserted using the "{{{{}}"
+escape sequence.
+
+Comments are supported as "{{#this is a comment}}" and are ignored when
+generating output.
+
+Conditional statements are supported with the "{{if CONDITION}}", "{{else}}"
+and "{{endif}}" directives. E.g.
+
+{{if a.b}}text is a.b is true...
+{{else}}more text if a.b is false...{{endif}}
+
+The 'CONDITION' to an 'if' directive must be a valid namespace variable
+reference, which is evaluated to a boolean using one of the following rules:
+        Integer variables               True if integer is non-zero
+        String variables                True if string is not empty
+        Array variables                 True if array has one or more elements
+        Dictionary variables            True if dict has one or more elements
+
+Loops are supported too, over libmobject arrays and dictionaries, using the
+"{{for}}" and "{{endfor}}" keywords. For example:
+
+{{for v in a.b}}
+Key:{{v.key}}
+Value:{{v.value}}
+{{endfor}}
+
+The loop variable ('v' in this example) is placed in the namespace with two
+members, 'key' and 'value'. When iterating over a libmobject array, 'key' will
+contain the array index (starting from zero), and 'value' will contain the 
+array element at that position. When iterating over a libmobject dictionary,
+'key' will contain the dictionary key and 'value' the value referenced by that
+key. Please note that dictionary iteration does not guarantee any particular
+ordering.
+
+The "mtc" program can process mtemplate templates from the commandline. E.g.
+
+        mtc -Dusers.djm.name="Damien Miller" -Dusers.djm.uid=12345 \
+            -Dusers.djm.groups[0]=djm -Dusers.djm.groups[1]=users \
+            -o example.out example.x
+
+Damien Miller <djm@mindrot.org> 2007-04-06
+
+[1] http://www.mindrot.org/projects/cfsm/
 
 Damien Miller <djm@mindrot.org> 2007-03-27
 

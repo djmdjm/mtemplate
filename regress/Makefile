@@ -15,12 +15,16 @@ CFLAGS+=    -g
 CFLAGS+=    -I..
 
 LDFLAGS=-g 
-LIBS=../libmobject.a
+LIBS=../libmtemplate.a
 
-TARGETS=mobject_t0 mobject_t1 mobject_t2 t_strstcpy
-EXEC_TARGETS= t_strstcpy_exec mobject_t0_exec mobject_t1_exec mobject_t2_exec
+BIN_TARGETS=	t_strstcpy
+BIN_TARGETS+=	mobject_t0 mobject_t1 mobject_t2
+BIN_TARGETS+=	mtemplate_t0
+EXEC_TARGETS=	t_strstcpy_exec
+EXEC_TARGETS+=	mobject_t0_exec mobject_t1_exec mobject_t2_exec
+EXEC_TARGETS+=	mtemplate_t0_exec
 
-all: ../libmobject.a $(TARGETS) t_start $(EXEC_TARGETS)
+all: $(LIBS) $(BIN_TARGETS) t_start $(EXEC_TARGETS)
 
 t_start:
 	@echo Running tests
@@ -28,26 +32,32 @@ t_start:
 mobject_t0_exec: mobject_t0
 	@./mobject_t0
 
-mobject_t0: mobject_t0.o ../libmobject.a 
+mobject_t0: mobject_t0.o $(LIBS) 
 	$(CC) -o $@ mobject_t0.o $(LDFLAGS) $(LIBS)
 
 mobject_t1_exec: mobject_t1
 	@./mobject_t1
 
-mobject_t1: mobject_t1.o ../libmobject.a 
+mobject_t1: mobject_t1.o $(LIBS) 
 	$(CC) -o $@ mobject_t1.o $(LDFLAGS) $(LIBS)
 
 mobject_t2_exec: mobject_t2
 	@./mobject_t2
 
-mobject_t2: mobject_t2.o ../libmobject.a 
+mobject_t2: mobject_t2.o $(LIBS) 
 	$(CC) -o $@ mobject_t2.o $(LDFLAGS) $(LIBS)
 
 t_strstcpy_exec: t_strstcpy
 	@./t_strstcpy
 
-t_strstcpy: t_strstcpy.o ../libmobject.a 
+t_strstcpy: t_strstcpy.o $(LIBS) 
 	$(CC) -o $@ t_strstcpy.o $(LDFLAGS) $(LIBS)
 
+mtemplate_t0_exec: mtemplate_t0
+	@./mtemplate_t0
+
+mtemplate_t0: mtemplate_t0.o ../libmtemplate.a 
+	$(CC) -o $@ mtemplate_t0.o $(LDFLAGS) $(LIBS)
+
 clean:
-	rm -f *.o $(TARGETS) core *.core
+	rm -f *.o $(BIN_TARGETS) core *.core

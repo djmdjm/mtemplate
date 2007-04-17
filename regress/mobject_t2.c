@@ -74,7 +74,7 @@ main(int argc, char **argv)
 	setenv("MALLOC_OPTIONS", "AFGJPRX", 1);
 
 	setvbuf(stdout, NULL, _IONBF, 0);
-	printf("t2:");
+	printf("mobject_t2:");
 
 	/* Prepare an namespace */
 	assert((ns = mdict_new()) != NULL);

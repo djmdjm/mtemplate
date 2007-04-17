@@ -1,56 +1,108 @@
-xdict_set_default
+***** mtemplate *****
+	!!!critical!!! xtemplate_free() 
+	
+	rewrite the parser using lex/yacc
+	
+	newline-eating parse mode
+	only if following line is a newline?
+	
+	output to string buffer
+	
+	conditional predicates
+	{{if a > b}}
+	probably needs yacc parser, maybe reuse moo?
+	
+	set variables within templates
+	{{v = 10}}
+	{{v++}}
+	
+	callback from templates into defined generating funcs? (probably not)
+	{{func(arg)}}
+	
+	some builtin functions would be useful:
+	{{join(values(iterable.var, ", "))}}
+	{{for i in sort(iterable.var, "NVR")}} ("NVR" -> Numeric, by Value, Reverse)
+	
+	sorted iteration, in particular on dictionary keys
+	how to deal with different sort types?
+	
+	filtered iteration
+	{{for k in a.b if k.value.xxx}}
+	
+	{{for k in x}}...{{else-for}}...{{end-for}} (maybe not)
+	
+	HTML, JS and maybe URL escaping e.g. "{{a.b:h}}"
+	nested escaping "{{a.b:hj}}"
+	smart automatic escaping based on HTML context
+	
+	xtc -Dvalue+=foo for array append
+	
+	manpages
+	
+	comments in directives
+	{{endif # something}}
+	
+	choice of delimiters
+	%%if foo%%
+	
+	Generic { escape:
+	{{{}} {{{{{}} 
+	i.e. any number of {'s after opening sequence but before closing sequence
 
-arbitrary objects as dict keys (ints at least)
-
-prevent free of object while iterating over them
-prevent modification of object while iterating (or abort iter)
-refcounts
-track object ownership (up-pointer)
-
-xdict_len -> number of items in dict
-
-recursive iteration
-
-cycle protection (you can add an array to itself at present, etc.)
-
-recursive printing (prototype in regress/t2.c)
-
-meaningful error codes
-
-sparse arrays
-
-better underlying data structures for arrays and dicts
-
-string operations (search, concat, etc.)
-
-non-recursive (iterative) deallocation (depth-first?, maybe needs
-ownership ptrs)
-
-rethink casting - should all *_new function return xobject?
-
-serialise to/from string in canonical encoding
-
-array concatenation
-
-array slicing (iterator or copy?)
-
-dict update (insert one dict to another)
-
-"set" datatype?
-
-namespace convenience functions:
-    v = namespace_get_string("blah[10].foo");
-    v = namespace_get_int("blah[10].foo");
-    it = namespace_iterate("blah");
-
-fix the horrors in xnamespace.c
-
-range iterator
-   xobject_getiter_range(0, 1000)
-
-convenience functions return pointer to inserted object
-  xdict_insert_sd(d, k, &newp)
-
-xdict_insert_scopy(d, k, obj)
+***** mobject *****
+	xdict_set_default
+	
+	arbitrary objects as dict keys (ints at least)
+	
+	prevent free of object while iterating over them
+	prevent modification of object while iterating (or abort iter)
+	refcounts
+	track object ownership (up-pointer)
+	
+	xdict_len -> number of items in dict
+	
+	recursive iteration
+	
+	cycle protection (you can add an array to itself at present, etc.)
+	
+	recursive printing (prototype in regress/t2.c)
+	
+	meaningful error codes
+	
+	sparse arrays
+	
+	better underlying data structures for arrays and dicts
+	
+	string operations (search, concat, etc.)
+	
+	non-recursive (iterative) deallocation (depth-first?, maybe needs
+	ownership ptrs)
+	
+	rethink casting - should all *_new function return xobject?
+	
+	serialise to/from string in canonical encoding
+	
+	array concatenation
+	
+	array slicing (iterator or copy?)
+	
+	dict update (insert one dict to another)
+	
+	"set" datatype?
+	
+	namespace convenience functions:
+	v = namespace_get_string("blah[10].foo");
+	v = namespace_get_int("blah[10].foo");
+	it = namespace_iterate("blah");
+	
+	fix the horrors in xnamespace.c
+	
+	range iterator
+	xobject_getiter_range(0, 1000)
+	
+	convenience functions return pointer to inserted object
+	xdict_insert_sd(d, k, &newp)
+	
+	xdict_insert_scopy(d, k, obj)
 
 $Id$

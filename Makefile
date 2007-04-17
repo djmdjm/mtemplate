@@ -11,22 +11,27 @@ CFLAGS+=    -Wshadow
 CFLAGS+=    -Wno-pointer-sign
 CFLAGS+=    -Wno-attributes
 
-CFLAGS+=    -g
-CFLAGS+=    -I.
+CFLAGS+=-g -I.
+LDFLAGS+=-L. -g
 
 RANLIB=ranlib
 
-LIBMOBJECT_OBJS=	mobject.o mnamespace.o helpers.o
-COMPAT_OBJS=		vis.o strlcpy.o strlcat.o strstcpy.o
+TARGETS=libmtemplate.a mtc
 
-all: libmobject.a
+LIBMTEMPLATE_OBJS=strstcpy.o mobject.o mnamespace.o helpers.o mtemplate.o 
+COMPAT_OBJS=vis.o strlcpy.o strlcat.o
 
-libmobject.a: $(LIBMOBJECT_OBJS) $(COMPAT_OBJS)
-	$(AR) rv $@ $(LIBMOBJECT_OBJS) $(COMPAT_OBJS)
+all: $(TARGETS)
+
+libmtemplate.a: $(LIBMTEMPLATE_OBJS) $(COMPAT_OBJS)
+	$(AR) rv $@ $(LIBMTEMPLATE_OBJS) $(COMPAT_OBJS)
 	$(RANLIB) $@
 
+mtc: mtc.o libmtemplate.a
+	$(CC) -o $@ mtc.o $(LDFLAGS) -lmtemplate
+
 clean:
-	rm -f *.o libmobject.a core *.core
+	rm -f *.o $(TARGETS) core *.core
 	cd regress && make clean
 
 test: all

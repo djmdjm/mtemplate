@@ -18,38 +18,38 @@
 
 /* Simple template system */
 
-#ifndef _XTEMPLATE_H
-#define _XTEMPLATE_H
+#ifndef _MTEMPLATE_H
+#define _MTEMPLATE_H
 
 #include <sys/types.h>
 #include <stdio.h>
 
-#include "xobject.h"
+#include "mobject.h"
 
-struct xtemplate;
+struct mtemplate;
 
 /*
  * Parse the text 'template', returning a compiled representation suitable
- * for later use by xtemplate_run().
+ * for later use by mtemplate_run().
  *
  * Returns a compiled template on success, or NULL if parsing.failed. On
  * error, up to 'elen' bytes of error message will be written to 'ebuf'.
  */
-struct xtemplate *xtemplate_parse(const char *template,
+struct mtemplate *mtemplate_parse(const char *template,
     char *ebuf, size_t elen);
 
 /*
- * Run the pre-compiled template 't', with an libxobject dictionary
+ * Run the pre-compiled template 't', with an libmobject dictionary
  * 'namespace'. Output will be written to 'out'.
  *
  * Returns a 0 on success, or -1 on failure. On failue, up to 'elen' bytes of
  * error message will be written to 'ebuf'.
  */
-int xtemplate_run_stdio(struct xtemplate *t, struct xobject *namespace,
+int mtemplate_run_stdio(struct mtemplate *t, struct mobject *namespace,
     FILE *out, char *ebuf, size_t elen);
 
 /*
- * Run the pre-compiled template 't', with an libxobject dictionary
+ * Run the pre-compiled template 't', with an libmobject dictionary
  * 'namespace'. Output will be returned in a string buffer pointed to by
  * 'outp'. It is the caller's responsibility to deallocate this buffer.
  *
@@ -57,11 +57,11 @@ int xtemplate_run_stdio(struct xtemplate *t, struct xobject *namespace,
  * error message will be written to 'ebuf'.
  */
 int
-xtemplate_run_mbuf(struct xtemplate *t, struct xobject *namespace, char **outp,
+mtemplate_run_mbuf(struct mtemplate *t, struct mobject *namespace, char **outp,
     char *ebuf, size_t elen);
 
 /*
- * Run the pre-compiled template 't', with an libxobject dictionary
+ * Run the pre-compiled template 't', with an libmobject dictionary
  * 'namespace'. Output will occur via the 'out_cb' callback, which will be
  * called for each hunk of text that is generated. The 'out_ctx' argument is
  * passed through to the callback for context.
@@ -75,7 +75,7 @@ xtemplate_run_mbuf(struct xtemplate *t, struct xobject *namespace, char **outp,
  * error message will be written to 'ebuf'.
  */
 int
-xtemplate_run_cb(struct xtemplate *t, struct xobject *namespace, char *ebuf,
+mtemplate_run_cb(struct mtemplate *t, struct mobject *namespace, char *ebuf,
     size_t elen, int (*out_cb)(const char *, void *), void *out_ctx);
 
-#endif /* _XTEMPLATE_H */
+#endif /* _MTEMPLATE_H */

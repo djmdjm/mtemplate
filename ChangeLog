@@ -1,4 +1,5 @@
 20070417
+ - (djm) Adapt xtemplate to libxobject's API change
  - (djm) Remove horrid casting: all public functions now work on struct
    xobject * alone, the other types are still used internally.
  - (djm) Start rename and merge of projects formally known as xobject and
@@ -6,17 +7,44 @@
    preserve history
  - (djm) Rename xobject and co. to "mobject" (Google codesearch tells me that
    this is a pretty clean namespace)
+ - (djm) Merge in and rename mtemplate (formerly xtemplate). Also done by
+   CVS repsoitory copy and rename
+ - (djm) Merge TODO, README and ChangeLog
+
+20070416
+ - (djm) Modify xtemplate generation routines to perform output using a
+   callback function, so we can support different output modes. Rewrite
+   stdio output mode using a callback.
+ - (djm) Rename xtemplate_run to xtemplate_run_stdio ahead of support for
+   new output styles
+ - (djm) Add xtemplate_run_mbuf() to generate into a automatically
+   allocated memory buffer
+ - (djm) Add a xtemplate basic regression test
+ - (djm) Fixed some invalid template syntax that was incorrectly being
+   accepted, found by the nascent regress test :)
 
 20070415
  - (djm) Add xdict_len() function and regress tests for it
  - (djm) Added some xarray_append_* helpers
  - (djm) Added xdict_replace_sn and xdict_insert_sn helpers
  - (djm) Add xint_add() function
+ - (djm) Bug: xtemplate text after final directive was being lost
+ - (djm) Bug: xtemplate errors in for loops were not being reported
+ - (djm) Use new xdict_len for better xtemplate dictionary evaluation
+
+20070407
+ - (djm) Change xtemplate directive delimeters to "{{...}}", so it is
+   possible to include rerefences to arrays (previously "[[array[1]]]" 
+   would be misparsed).
+ - (djm) gc some dead/debug xtemplate code
+ - (djm) Some polish: flesh out xtemplate README, document functions in
+   xtemplate.h, lots more TODO
 
 20070405
  - (djm) Move convenience functions to their own file
  - (djm) Implement xnamespace_set() + regress tests
  - (djm) Implement xobject_deepcopy()
+ - (djm) Initial version of xtemplate
 
 20070404
  - (djm) Added xarray_set() function
@@ -34,7 +62,7 @@
    difficult to use
 
 20070327
- - (djm) Initial version (late night hacking session)
+ - (djm) Initial version of xobject (late night hacking session)
 
 $Id$
 
