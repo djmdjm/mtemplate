@@ -41,11 +41,11 @@ usage(void)
 }
 
 static void
-define(struct xdict *namespace, const char *kv)
+define(struct xobject *namespace, const char *kv)
 {
 	const char *cp;
 	char kbuf[256], ebuf[512];
-	struct xstring *v;
+	struct xobject *v;
 
 	if ((cp = strchr(kv, '=')) == NULL || cp == kv || *(cp + 1) == '\0') {
 		warnx("Invalid define");
@@ -59,8 +59,7 @@ define(struct xdict *namespace, const char *kv)
 	if ((v = xstring_new(cp + 1)) == NULL)
 		errx(1, "xstring_new failed");
 
-	if (xnamespace_set(namespace, kbuf, (struct xobject *)v,
-	    ebuf, sizeof(ebuf)) != 0)
+	if (xnamespace_set(namespace, kbuf, v, ebuf, sizeof(ebuf)) != 0)
 		errx(1, "xnamespace_set: %s", ebuf);
 }
 
@@ -74,7 +73,7 @@ main(int argc, char **argv)
 	const char *out_path = "-";
 	size_t tlen;
 	struct xtemplate *t;
-	struct xdict *namespace;
+	struct xobject *namespace;
 	FILE *out;
 
 	if ((namespace = xdict_new()) == NULL)

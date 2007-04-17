@@ -45,7 +45,7 @@ struct xtemplate *xtemplate_parse(const char *template,
  * Returns a 0 on success, or -1 on failure. On failue, up to 'elen' bytes of
  * error message will be written to 'ebuf'.
  */
-int xtemplate_run_stdio(struct xtemplate *t, struct xdict *namespace,
+int xtemplate_run_stdio(struct xtemplate *t, struct xobject *namespace,
     FILE *out, char *ebuf, size_t elen);
 
 /*
@@ -57,7 +57,7 @@ int xtemplate_run_stdio(struct xtemplate *t, struct xdict *namespace,
  * error message will be written to 'ebuf'.
  */
 int
-xtemplate_run_mbuf(struct xtemplate *t, struct xdict *namespace, char **outp,
+xtemplate_run_mbuf(struct xtemplate *t, struct xobject *namespace, char **outp,
     char *ebuf, size_t elen);
 
 /*
@@ -75,7 +75,7 @@ xtemplate_run_mbuf(struct xtemplate *t, struct xdict *namespace, char **outp,
  * error message will be written to 'ebuf'.
  */
 int
-xtemplate_run_cb(struct xtemplate *t, struct xdict *namespace, char *ebuf,
+xtemplate_run_cb(struct xtemplate *t, struct xobject *namespace, char *ebuf,
     size_t elen, int (*out_cb)(const char *, void *), void *out_ctx);
 
 #endif /* _XTEMPLATE_H */

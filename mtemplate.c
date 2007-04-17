@@ -94,8 +94,8 @@ struct alloc_cb_ctx {
 #define ALLOC_MAX	(64 * 1024 * 1024)
 
 static int
-xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xdict *namespace,
-    struct xdict *local_namespace, char *ebuf, size_t elen,
+xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xobject *namespace,
+    struct xobject *local_namespace, char *ebuf, size_t elen,
     int (*out_cb)(const char *, void *), void *out_ctx);
 
 static void
@@ -416,21 +416,21 @@ xobject_as_boolean(struct xobject *o)
 		case TYPE_XNONE:
 			return 0;
 		case TYPE_XSTRING:
-			return (xstring_len((struct xstring *)o) > 0);
+			return (xstring_len(o) > 0);
 		case TYPE_XINT:
-			return (xint_value((struct xint *)o) != 0);
+			return (xint_value(o) != 0);
 		case TYPE_XARRAY:
-			return (xarray_len((struct xarray *)o) > 0);
+			return (xarray_len(o) > 0);
 		case TYPE_XDICT:
-			return (xdict_len((struct xdict *)o) > 0);
+			return (xdict_len(o) > 0);
 		default:
 			return 0;
 	}
 }
 
 static struct xobject *
-fetch_var(char *name, struct xdict *namespace,
-    struct xdict *local_namespace, u_int lnum, char *directive,
+fetch_var(char *name, struct xobject *namespace,
+    struct xobject *local_namespace, u_int lnum, char *directive,
     char *ebuf, size_t elen)
 {
 	char buf[1024];
@@ -452,24 +452,23 @@ fetch_var(char *name, struct xdict *namespace,
 
 static int
 do_loop(struct xtemplate_node *n, struct xiteritem *item,
-    struct xdict *namespace, struct xdict *frame, char *ebuf, size_t elen,
+    struct xobject *namespace, struct xobject *frame, char *ebuf, size_t elen,
     int (*out_cb)(const char *, void *), void *out_ctx)
 {
 	struct xobject *k, *v;
-	struct xdict *loopvar;
+	struct xobject *loopvar;
 	int r;
 
-	if ((loopvar = (struct xdict *)xdict_item_s(frame,
-	    n->localvar)) == NULL) {
+	if ((loopvar = xdict_item_s(frame, n->localvar)) == NULL) {
 		format_err(n->lnum, ebuf, elen, "Loop variable missing");
 		return -1;
 	}
 	/* Enter the name into the local namespace */
-	if ((k = xobject_deepcopy((struct xobject *)item->key)) == NULL) {
+	if ((k = xobject_deepcopy(item->key)) == NULL) {
 		format_err(n->lnum, ebuf, elen, "Loop key copy failed");
 		return -1;
 	}
-	if ((v = xobject_deepcopy((struct xobject *)item->value)) == NULL) {
+	if ((v = xobject_deepcopy(item->value)) == NULL) {
 		xobject_free(k);
 		format_err(n->lnum, ebuf, elen, "Loop value copy failed");
 		return -1;
@@ -500,7 +499,7 @@ render_xobject(struct xobject *o, u_int lnum, char *ebuf, size_t elen,
 	size_t need;
 
 	if (xobject_type(o) == TYPE_XSTRING) {
-		if (out_cb(xstring_ptr((struct xstring *)o), out_ctx) != 0) {
+		if (out_cb(xstring_ptr(o), out_ctx) != 0) {
 			format_err(lnum, ebuf, elen, "write error");
 			return -1;
 		}
@@ -531,15 +530,15 @@ render_xobject(struct xobject *o, u_int lnum, char *ebuf, size_t elen,
 }
 
 static int
-xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xdict *namespace,
-    struct xdict *local_namespace, char *ebuf, size_t elen,
+xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xobject *namespace,
+    struct xobject *local_namespace, char *ebuf, size_t elen,
     int (*out_cb)(const char *, void *), void *out_ctx)
 {
 	struct xtemplate_node *n;
 	struct xobject *o;
 	struct xiterator *iter;
 	struct xiteritem *item;
-	struct xdict *frame;
+	struct xobject *frame;
 	int r;
 
 	TAILQ_FOREACH(n, nodes, entry) {
@@ -577,8 +576,8 @@ xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xdict *namespace,
 				    n->text);
 				return -1;
 			}
-			if ((frame = (struct xdict *)xobject_deepcopy(
-			    (struct xobject *)local_namespace)) == NULL) {
+			frame = xobject_deepcopy(local_namespace);
+			if (frame == NULL) {
 				format_err(n->lnum, ebuf, elen,
 				    "Could not create local namespace");
 				xiterator_free(iter);
@@ -588,7 +587,7 @@ xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xdict *namespace,
 			if (xdict_replace_sd(frame, n->localvar) == -1) {
 				format_err(n->lnum, ebuf, elen,
 				    "Could not setup loop variable");
-				xobject_free((struct xobject *)frame);
+				xobject_free(frame);
 				xiterator_free(iter);
 				return -1;
 			}
@@ -598,7 +597,7 @@ xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xdict *namespace,
 					return -1;
 			}
 			xiterator_free(iter);
-			xobject_free((struct xobject *)frame);
+			xobject_free(frame);
 			break;
 		case NODE_DIRECTIVE_SUBST:
 			if ((o = fetch_var(n->text, namespace, local_namespace,
@@ -620,10 +619,10 @@ xtemplate_run_nodes(struct xtemplate_nodes *nodes, struct xdict *namespace,
 }
 
 int
-xtemplate_run_cb(struct xtemplate *t, struct xdict *namespace, char *ebuf,
+xtemplate_run_cb(struct xtemplate *t, struct xobject *namespace, char *ebuf,
     size_t elen, int (*out_cb)(const char *, void *), void *out_ctx)
 {
-	struct xdict *local_namespace;
+	struct xobject *local_namespace;
 	int r;
 
 	if ((local_namespace = xdict_new()) == NULL) {
@@ -633,7 +632,7 @@ xtemplate_run_cb(struct xtemplate *t, struct xdict *namespace, char *ebuf,
 	}
 	r = xtemplate_run_nodes(&t->root.child_nodes, namespace,
 	    local_namespace, ebuf, elen, out_cb, out_ctx);
-	xobject_free((struct xobject *)local_namespace);
+	xobject_free(local_namespace);
 	return r;
 }
 
@@ -644,7 +643,7 @@ out_stdio_cb(const char *buf, void *ctx)
 }
 
 int
-xtemplate_run_stdio(struct xtemplate *t, struct xdict *namespace, FILE *out,
+xtemplate_run_stdio(struct xtemplate *t, struct xobject *namespace, FILE *out,
     char *ebuf, size_t elen)
 {
 	return xtemplate_run_cb(t, namespace, ebuf, elen, out_stdio_cb, out);
@@ -686,7 +685,7 @@ out_alloc_cb(const char *buf, void *_ctx)
 }
 
 int
-xtemplate_run_mbuf(struct xtemplate *t, struct xdict *namespace, char **outp,
+xtemplate_run_mbuf(struct xtemplate *t, struct xobject *namespace, char **outp,
     char *ebuf, size_t elen)
 {
 	struct alloc_cb_ctx ctx = { NULL, 0, 0 };

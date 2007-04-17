@@ -19,7 +19,7 @@
 int
 main(int argc, char **argv)
 {
-	struct xdict *namespace;
+	struct xobject *namespace;
 	struct xtemplate *t;
 	struct xobject *obj;
 	char *o;
@@ -130,10 +130,10 @@ main(int argc, char **argv)
 	/* Case 17: iteration over array */
 	assert(xdict_replace_sa(namespace, "v") == 0);
 	assert((obj = xdict_item_s(namespace, "v")) != NULL);
-	assert(xarray_append_s((struct xarray *)obj, "wow") == 0);
-	assert(xarray_append_s((struct xarray *)obj, "this") == 0);
-	assert(xarray_append_s((struct xarray *)obj, "worked") == 0);
-	assert(xarray_append_i((struct xarray *)obj, 765432) == 0);
+	assert(xarray_append_s(obj, "wow") == 0);
+	assert(xarray_append_s(obj, "this") == 0);
+	assert(xarray_append_s(obj, "worked") == 0);
+	assert(xarray_append_i(obj, 765432) == 0);
 	assert(xtemplate_run_mbuf(t, namespace, &o, NULL, 0) == 0);
 	assert(strcmp(o, "K:0V:wow K:1V:this K:2V:worked K:3V:765432 ") == 0);
 	printf(".");
@@ -141,8 +141,8 @@ main(int argc, char **argv)
 	/* Case 18: iteration over dictionary */
 	assert(xdict_replace_sd(namespace, "v") == 0);
 	assert((obj = xdict_item_s(namespace, "v")) != NULL);
-	assert(xdict_insert_ss((struct xdict *)obj, "k1", "v1") == 0);
-	assert(xdict_insert_ss((struct xdict *)obj, "k2", "v2") == 0);
+	assert(xdict_insert_ss(obj, "k1", "v1") == 0);
+	assert(xdict_insert_ss(obj, "k2", "v2") == 0);
 	assert(xtemplate_run_mbuf(t, namespace, &o, NULL, 0) == 0);
 	/* Dictionary iteration doesn't guarantee order */
 	assert(strstr(o, "K:k1V:v1 ") != 0);
