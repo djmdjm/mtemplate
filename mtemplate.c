@@ -28,8 +28,7 @@
 #include <stdarg.h>
 
 #include "sys-queue.h"
-#include "strlcpy.h"
-#include "strlcat.h"
+#include "compat.h"
 
 #include "mtemplate.h"
 #include "mobject.h"
@@ -94,8 +93,8 @@ struct alloc_cb_ctx {
 #define ALLOC_MAX	(64 * 1024 * 1024)
 
 static int
-mtemplate_run_nodes(struct mtemplate_nodes *nodes, struct mobject *namespace,
-    struct mobject *local_namespace, char *ebuf, size_t elen,
+mtemplate_run_nodes(struct mtemplate_nodes *nodes, struct mobject *ns,
+    struct mobject *local_ns, char *ebuf, size_t elen,
     int (*out_cb)(const char *, void *), void *out_ctx);
 
 static void
@@ -170,6 +169,7 @@ parse_for(struct mtemplate_node *n)
 		free(tmp);
 		return -1;
 	}
+	free(n->text);
 	n->text = tmp;
 	return 0;
 }
@@ -199,11 +199,15 @@ classify_node(const char *directive, size_t len, const char **end_p,
 		return 0;
 	}
 
-	/* Check for [[ escape */
-	if (len == 2 && strncmp(directive, "{{", 2) == 0) {
-		*end_p = directive;
-		*typep = NODE_TEXT;
-		return 0;
+	/* Check for {* escape */
+	if (*directive == '{') {
+		for (i = 1; i < len && directive[i] == '{'; i++)
+			;
+		if (i >= len) {
+			*end_p = directive;
+			*typep = NODE_TEXT;
+			return 0;
+		}
 	}
 
 	/* Probably a DIRECTIVE_SUBST, but do a basic sanity check */
@@ -236,7 +240,7 @@ mtemplate_node_parent(enum node_type n)
 /* XXX append-to-template/incremental parse mode (keep state for [/[) */
 
 struct mtemplate *
-mtemplate_parse(const char *template, char *ebuf, size_t elen)
+mtemplate_parse(const char *text, char *ebuf, size_t elen)
 {
 	size_t o, p, dlen, tlen;
 	int lnum;
@@ -263,16 +267,19 @@ mtemplate_parse(const char *template, char *ebuf, size_t elen)
 	node = NULL;
 	for(p = o = 0, lnum = 1;;) {
 		/* Match newlines and directive starting sequence */
-		start_p = strpbrk(template + o + p, "\n{");
+		start_p = strpbrk(text + o + p, "\n{");
 
 		/* Append string at end of template */
 		if (start_p == NULL) {
-			p = strlen(template + o);
+			p = strlen(text + o);
 			if (p == 0)
 				break;
-			if ((node = alloc_node(template + o, p, NODE_TEXT,
-			    lnum, parent, ebuf, elen)) == NULL)
+			if ((node = alloc_node(text + o, p, NODE_TEXT,
+			    lnum, parent, ebuf, elen)) == NULL) {
+ mtemplate_parse_err:
+				mtemplate_free(ret);
 				return NULL;
+			}
 			TAILQ_INSERT_TAIL(activep, node, entry);
 			break;
 		}
@@ -280,23 +287,23 @@ mtemplate_parse(const char *template, char *ebuf, size_t elen)
 		/* Count newlines */
 		if (*start_p == '\n') {
 			lnum++;
-			p = (start_p + 1) - (template + o);
+			p = (start_p + 1) - (text + o);
 			continue;
 		}
 		/* Make sure we have a full opening sequence */
 		if (*(start_p + 1) != '{') {
-			p = (start_p + 1) - (template + o);
+			p = (start_p + 1) - (text + o);
 			continue;
 		}
 
 		/* We have found a directive */
 
 		/* Append a text node up until the current directive */
-		if (start_p > template + o) {
-			if ((node = alloc_node(template + o,
-			    start_p - (template + o), NODE_TEXT,
+		if (start_p > text + o) {
+			if ((node = alloc_node(text + o,
+			    start_p - (text + o), NODE_TEXT,
 			    lnum, parent, ebuf, elen)) == NULL)
-				return NULL;
+				goto mtemplate_parse_err;
 			TAILQ_INSERT_TAIL(activep, node, entry);
 		}
 	
@@ -306,19 +313,19 @@ mtemplate_parse(const char *template, char *ebuf, size_t elen)
 		/* Find end of directive */
 		if ((end_p = strstr(start_p, "}}")) == NULL) {
 			format_err(lnum, ebuf, elen, "Unterminated directive");
-			return NULL;
+			goto mtemplate_parse_err;
 		}
 		/* Disallow newlines inside directive */
 		if ((cp = strchr(start_p, '\n')) != NULL && cp <= end_p) {
 			format_err(lnum, ebuf, elen, "Newline in directive");
-			return NULL;
+			goto mtemplate_parse_err;
 		}
 
 		dlen = end_p - start_p;
 		/* Disallow empty directives */
 		if (dlen < 1) {
 			format_err(lnum, ebuf, elen, "Empty directive");
-			return NULL;
+			goto mtemplate_parse_err;
 		}
 
 		/* Skip comment directives entirely */
@@ -328,7 +335,7 @@ mtemplate_parse(const char *template, char *ebuf, size_t elen)
 		if (classify_node(start_p, dlen, &cp, &type) == -1 ||
 		    (cp != NULL && cp >= end_p)) {
 			format_err(lnum, ebuf, elen, "Invalid directive");
-			return NULL;
+			goto mtemplate_parse_err;
 		}
 		tlen = (cp == NULL) ? 0 : end_p - cp;
 
@@ -340,7 +347,7 @@ mtemplate_parse(const char *template, char *ebuf, size_t elen)
 			    "\"%s\" directive outside of \"%s\"",
 			    node_type_ntop(type),
 			    node_type_ntop(expected));
-			return NULL;
+			goto mtemplate_parse_err;
 		}
 
 		/* Handle else, ascend on block close */
@@ -349,7 +356,7 @@ mtemplate_parse(const char *template, char *ebuf, size_t elen)
 			if (parent->in_else) {
 				format_err(lnum, ebuf, elen,
 				    "\"else\" inside \"else\"");
-				return NULL;
+				goto mtemplate_parse_err;
 			}
 			parent->in_else = 1;
 			activep = &parent->child_nodes_else;
@@ -370,7 +377,7 @@ mtemplate_parse(const char *template, char *ebuf, size_t elen)
 
 		if ((node = alloc_node(cp, tlen, type, lnum,
 		    parent, ebuf, elen)) == NULL) {
-			return NULL;
+			goto mtemplate_parse_err;
 		}
 		TAILQ_INSERT_TAIL(activep, node, entry);
 
@@ -380,7 +387,7 @@ mtemplate_parse(const char *template, char *ebuf, size_t elen)
 			if (parse_for(node) == -1) {
 				format_err(lnum, ebuf, elen,
 				    "Invalid \"for\" syntax");
-				return NULL;
+				goto mtemplate_parse_err;
 			}
 			/* FALLTHROUGH */
 		case NODE_DIRECTIVE_IF:
@@ -393,17 +400,47 @@ mtemplate_parse(const char *template, char *ebuf, size_t elen)
 
 node_done:
 		p = 0;
-		o = 2 + end_p - template;
+		o = 2 + end_p - text;
 	}
 
 	if (parent != &ret->root) {
 		format_err(lnum, ebuf, elen,
 		    "Unclosed \"%s\" block, begun at line %u",
 		    node_type_ntop(parent->type), parent->lnum);
-		return NULL;
+		goto mtemplate_parse_err;
 	}
 
 	return ret;
+}
+
+static void
+mtemplate_free_nodes(struct mtemplate_nodes *nodes)
+{
+	struct mtemplate_node *n;
+
+	while ((n = TAILQ_FIRST(nodes)) != NULL) {
+		TAILQ_REMOVE(nodes, n, entry);
+		if (n->text != NULL) {
+			bzero(n->text, strlen(n->text));
+			free(n->text);
+		}
+		if (n->localvar != NULL) {
+			bzero(n->localvar, strlen(n->localvar));
+			free(n->localvar);
+		}
+		mtemplate_free_nodes(&n->child_nodes);
+		mtemplate_free_nodes(&n->child_nodes_else);
+		bzero(n, sizeof(n));
+		free(n);
+	}
+}
+
+void
+mtemplate_free(struct mtemplate *tmpl)
+{
+	mtemplate_free_nodes(&tmpl->root.child_nodes);
+	bzero(tmpl, sizeof(tmpl));
+	free(tmpl);
 }
 
 /* XXX move this to libmobject */
@@ -429,21 +466,19 @@ mobject_as_boolean(struct mobject *o)
 }
 
 static struct mobject *
-fetch_var(char *name, struct mobject *namespace,
-    struct mobject *local_namespace, u_int lnum, char *directive,
-    char *ebuf, size_t elen)
+fetch_var(char *name, struct mobject *ns, struct mobject *local_ns,
+    u_int lnum, char *directive, char *ebuf, size_t elen)
 {
 	char buf[1024];
 	struct mobject *o;
 
-	/* XXX need better xnamespace_lookup return values */
+	/* XXX need better mnamespace_lookup return values */
 	/* Look up in local namespace first */
-	if (xnamespace_lookup(local_namespace, name, &o,
-	    buf, sizeof(buf)) == 0)
+	if (mnamespace_lookup(local_ns, name, &o, buf, sizeof(buf)) == 0)
 		return o;
 	/* Try user namespace next */
-	if (namespace != NULL &&
-	    xnamespace_lookup(namespace, name, &o, buf, sizeof(buf)) == 0)
+	if (ns != NULL &&
+	    mnamespace_lookup(ns, name, &o, buf, sizeof(buf)) == 0)
 		return o;
 
 	format_err(lnum, ebuf, elen, "Error in %s: %s", directive, buf);
@@ -452,7 +487,7 @@ fetch_var(char *name, struct mobject *namespace,
 
 static int
 do_loop(struct mtemplate_node *n, struct miteritem *item,
-    struct mobject *namespace, struct mobject *frame, char *ebuf, size_t elen,
+    struct mobject *ns, struct mobject *frame, char *ebuf, size_t elen,
     int (*out_cb)(const char *, void *), void *out_ctx)
 {
 	struct mobject *k, *v;
@@ -484,13 +519,13 @@ do_loop(struct mtemplate_node *n, struct miteritem *item,
 		format_err(n->lnum, ebuf, elen, "Loop value insert failed");
 		return -1;
 	}
-	r = mtemplate_run_nodes(&n->child_nodes, namespace, frame,
-	    ebuf, elen, out_cb, out_ctx);
+	r = mtemplate_run_nodes(&n->child_nodes, ns, frame, ebuf, elen,
+	    out_cb, out_ctx);
 	return r;
 }
 
 /* XXX: libmobject should have a non-vis mode */
-#define RENDER_XO_ALLOC 256
+#define RENDER_MO_ALLOC 256
 static int
 render_mobject(struct mobject *o, u_int lnum, char *ebuf, size_t elen,
     int (*out_cb)(const char *, void *), void *out_ctx)
@@ -505,13 +540,13 @@ render_mobject(struct mobject *o, u_int lnum, char *ebuf, size_t elen,
 		}
 		return 0;
 	}
-	if ((buf = malloc(RENDER_XO_ALLOC)) == NULL) {
+	if ((buf = malloc(RENDER_MO_ALLOC)) == NULL) {
 		format_err(lnum, ebuf, elen,
-		    "malloc(%zu) failed for substitution", RENDER_XO_ALLOC);
+		    "malloc(%zu) failed for substitution", RENDER_MO_ALLOC);
 		return -1;
 	}
-	need = mobject_to_string(o, buf, RENDER_XO_ALLOC) + 1;
-	if (need >= RENDER_XO_ALLOC) {
+	need = mobject_to_string(o, buf, RENDER_MO_ALLOC) + 1;
+	if (need >= RENDER_MO_ALLOC) {
 		if ((tmp = realloc(buf, need)) == NULL) {
 			format_err(lnum, ebuf, elen,
 			    "realloc(%zu) failed for substitution", need);
@@ -530,8 +565,8 @@ render_mobject(struct mobject *o, u_int lnum, char *ebuf, size_t elen,
 }
 
 static int
-mtemplate_run_nodes(struct mtemplate_nodes *nodes, struct mobject *namespace,
-    struct mobject *local_namespace, char *ebuf, size_t elen,
+mtemplate_run_nodes(struct mtemplate_nodes *nodes, struct mobject *ns,
+    struct mobject *local_ns, char *ebuf, size_t elen,
     int (*out_cb)(const char *, void *), void *out_ctx)
 {
 	struct mtemplate_node *n;
@@ -550,24 +585,22 @@ mtemplate_run_nodes(struct mtemplate_nodes *nodes, struct mobject *namespace,
 			}
 			break;
 		case NODE_DIRECTIVE_IF:
-			if ((o = fetch_var(n->text, namespace, local_namespace,
-			    n->lnum, "\"if\" directive", ebuf, elen)) == NULL)
+			if ((o = fetch_var(n->text, ns, local_ns, n->lnum,
+			    "\"if\" directive", ebuf, elen)) == NULL)
 				return -1;
 			if (mobject_as_boolean(o)) {
-				r = mtemplate_run_nodes(&n->child_nodes,
-				    namespace, local_namespace, ebuf, elen,
-				    out_cb, out_ctx);
+				r = mtemplate_run_nodes(&n->child_nodes, ns,
+				    local_ns, ebuf, elen, out_cb, out_ctx);
 			} else {
 				r = mtemplate_run_nodes(&n->child_nodes_else,
-				    namespace, local_namespace, ebuf, elen,
-				    out_cb, out_ctx);
+				    ns, local_ns, ebuf, elen, out_cb, out_ctx);
 			}
 			if (r != 0)
 				return r;
 			break;
 		case NODE_DIRECTIVE_FOR:
-			if ((o = fetch_var(n->text, namespace, local_namespace,
-			    n->lnum, "\"for\" directive", ebuf, elen)) == NULL)
+			if ((o = fetch_var(n->text, ns, local_ns, n->lnum,
+			    "\"for\" directive", ebuf, elen)) == NULL)
 				return -1;
 			if ((iter = mobject_getiter(o)) == NULL) {
 				format_err(n->lnum, ebuf, elen,
@@ -576,7 +609,7 @@ mtemplate_run_nodes(struct mtemplate_nodes *nodes, struct mobject *namespace,
 				    n->text);
 				return -1;
 			}
-			frame = mobject_deepcopy(local_namespace);
+			frame = mobject_deepcopy(local_ns);
 			if (frame == NULL) {
 				format_err(n->lnum, ebuf, elen,
 				    "Could not create local namespace");
@@ -592,17 +625,19 @@ mtemplate_run_nodes(struct mtemplate_nodes *nodes, struct mobject *namespace,
 				return -1;
 			}
 			while ((item = miterator_next(iter)) != NULL) {
-				if (do_loop(n, item, namespace, frame,
-				    ebuf, elen, out_cb, out_ctx) == -1)
+				if (do_loop(n, item, ns, frame,
+				    ebuf, elen, out_cb, out_ctx) == -1) {
+					miterator_free(iter);
+					mobject_free(frame);
 					return -1;
+				}
 			}
 			miterator_free(iter);
 			mobject_free(frame);
 			break;
 		case NODE_DIRECTIVE_SUBST:
-			if ((o = fetch_var(n->text, namespace, local_namespace,
-			    n->lnum, "variable substitution",
-			    ebuf, elen)) == NULL)
+			if ((o = fetch_var(n->text, ns, local_ns, n->lnum,
+			    "variable substitution", ebuf, elen)) == NULL)
 				return -1;
 			if (render_mobject(o, n->lnum, ebuf, elen,
 			    out_cb, out_ctx) == -1)
@@ -619,20 +654,20 @@ mtemplate_run_nodes(struct mtemplate_nodes *nodes, struct mobject *namespace,
 }
 
 int
-mtemplate_run_cb(struct mtemplate *t, struct mobject *namespace, char *ebuf,
+mtemplate_run_cb(struct mtemplate *tmpl, struct mobject *ns, char *ebuf,
     size_t elen, int (*out_cb)(const char *, void *), void *out_ctx)
 {
-	struct mobject *local_namespace;
+	struct mobject *local_ns;
 	int r;
 
-	if ((local_namespace = mdict_new()) == NULL) {
+	if ((local_ns = mdict_new()) == NULL) {
 		format_err(-1, ebuf, elen,
 		    "Unable to allocate local namespace");
 		return -1;
 	}
-	r = mtemplate_run_nodes(&t->root.child_nodes, namespace,
-	    local_namespace, ebuf, elen, out_cb, out_ctx);
-	mobject_free(local_namespace);
+	r = mtemplate_run_nodes(&tmpl->root.child_nodes, ns,
+	    local_ns, ebuf, elen, out_cb, out_ctx);
+	mobject_free(local_ns);
 	return r;
 }
 
@@ -643,10 +678,10 @@ out_stdio_cb(const char *buf, void *ctx)
 }
 
 int
-mtemplate_run_stdio(struct mtemplate *t, struct mobject *namespace, FILE *out,
+mtemplate_run_stdio(struct mtemplate *tmpl, struct mobject *ns, FILE *out,
     char *ebuf, size_t elen)
 {
-	return mtemplate_run_cb(t, namespace, ebuf, elen, out_stdio_cb, out);
+	return mtemplate_run_cb(tmpl, ns, ebuf, elen, out_stdio_cb, out);
 }
 
 static int
@@ -685,15 +720,17 @@ out_alloc_cb(const char *buf, void *_ctx)
 }
 
 int
-mtemplate_run_mbuf(struct mtemplate *t, struct mobject *namespace, char **outp,
+mtemplate_run_mbuf(struct mtemplate *tmpl, struct mobject *ns, char **outp,
     char *ebuf, size_t elen)
 {
 	struct alloc_cb_ctx ctx = { NULL, 0, 0 };
 	int r;
 
 	*outp = NULL;
-	r = mtemplate_run_cb(t, namespace, ebuf, elen, out_alloc_cb, &ctx);
+	r = mtemplate_run_cb(tmpl, ns, ebuf, elen, out_alloc_cb, &ctx);
 	if (r == 0)
 		*outp = ctx.s;
+	else
+		free(ctx.s);
 	return r;
 }

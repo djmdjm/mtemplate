@@ -1,5 +1,5 @@
 /*
- * Regress test for xnamespace functions
+ * Regress test for mnamespace functions
  * Public domain -- Damien Miller <djm@mindrot.org> 2007-03-27
  */
 
@@ -14,7 +14,7 @@
 #include <assert.h>
 
 #include "mobject.h"
-#include "strlcat.h"
+#include "compat.h"
 
 int
 main(int argc, char **argv)
@@ -77,87 +77,87 @@ main(int argc, char **argv)
 	}
 
 	/* Case 1: Lookup null at root*/
-	assert(xnamespace_lookup(ns, "", &xo, ebuf, sizeof(ebuf)) == -1);
+	assert(mnamespace_lookup(ns, "", &xo, ebuf, sizeof(ebuf)) == -1);
 	assert(strcmp(ebuf, "Empty location specified") == 0);
 	printf(".");
 
 	/* Case 2: Lookup one level down */
-	assert(xnamespace_lookup(ns, "hello", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello", &xo, ebuf,
 	    sizeof(ebuf)) == 0);
 	assert(xo == hello);
 	printf(".");
 
 	/* Case 3: Lookup empty one level down */
-	assert(xnamespace_lookup(ns, "hello.", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello.", &xo, ebuf,
 	    sizeof(ebuf)) == -1);
 	assert(strcmp(ebuf, "Empty name at \"hello.\"") == 0);
 	printf(".");
 
 	/* Case 4: lookup under second-level dict */
-	assert(xnamespace_lookup(ns, "hello.there", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello.there", &xo, ebuf,
 	    sizeof(ebuf)) == 0);
 	assert(xo == there);
 	printf(".");
 
 	/* Case 5: lookup array entry */
-	assert(xnamespace_lookup(ns, "hello.there[42]", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello.there[42]", &xo, ebuf,
 	    sizeof(ebuf)) == 0);
 	assert(xo == there42);
 	printf(".");
 
 	/* Case 6: Deep lookups */
-	assert(xnamespace_lookup(ns, "hello.there[42].x", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello.there[42].x", &xo, ebuf,
 	    sizeof(ebuf)) == 0);
-	assert(xnamespace_lookup(ns, "hello.there[42].x.y", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello.there[42].x.y", &xo, ebuf,
 	    sizeof(ebuf)) == 0);
-	assert(xnamespace_lookup(ns, "hello.there[42].x.y.z", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello.there[42].x.y.z", &xo, ebuf,
 	    sizeof(ebuf)) == 0);
-	assert(xnamespace_lookup(ns, "hello.there[42].x.y.z[24]", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello.there[42].x.y.z[24]", &xo, ebuf,
 	    sizeof(ebuf)) == 0);
 	assert(xo == z24);
 	printf(".");
 
 	/* Case 7: Bad name at root */
-	assert(xnamespace_lookup(ns, "xhello", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "xhello", &xo, ebuf,
 	    sizeof(ebuf)) == -1);
 	assert(strcmp(ebuf, "Name \"xhello\" not found") == 0);
-	assert(xnamespace_lookup(ns, "xhello.there[42].x.y.z[24]", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "xhello.there[42].x.y.z[24]", &xo, ebuf,
 	    sizeof(ebuf)) == -1);
 	assert(strcmp(ebuf, "Name \"xhello\" not found") == 0);
 	printf(".");
 
 	/* Case 8: Bad name one down */
-	assert(xnamespace_lookup(ns, "hello.therex", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello.therex", &xo, ebuf,
 	    sizeof(ebuf)) == -1);
 	assert(strcmp(ebuf, "Name \"therex\" not found at \"hello.\"") == 0);
-	assert(xnamespace_lookup(ns, "hello.therex[42].x.y.z[24]", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello.therex[42].x.y.z[24]", &xo, ebuf,
 	    sizeof(ebuf)) == -1);
 	assert(strcmp(ebuf, "Name \"therex\" not found at \"hello.\"") == 0);
 	printf(".");
 
 	/* Case 9: Array index out of bounds */
-	assert(xnamespace_lookup(ns, "hello.there[43].x.y.z[24]", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello.there[43].x.y.z[24]", &xo, ebuf,
 	    sizeof(ebuf)) == -1);
 	assert(strcmp(ebuf,
 	    "Array index is out of bounds at \"hello.there[43]\"") == 0);
 	printf(".");
 
 	/* Case 10: Negative array index */
-	assert(xnamespace_lookup(ns, "hello.there[-1].x.y.z[24]", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello.there[-1].x.y.z[24]", &xo, ebuf,
 	    sizeof(ebuf)) == -1);
 	assert(strcmp(ebuf,
 	    "Array index is out of bounds at \"hello.there[-1]\"") == 0);
 	printf(".");
 
 	/* Case 11: Non numeric array index */
-	assert(xnamespace_lookup(ns, "hello.there[blah].x.y.z[24]", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello.there[blah].x.y.z[24]", &xo, ebuf,
 	    sizeof(ebuf)) == -1);
 	assert(strcmp(ebuf,
 	    "Array index is not a number at \"hello.there[blah]\"") == 0);
 	printf(".");
 
 	/* Case 12: Unterminated array index */
-	assert(xnamespace_lookup(ns, "hello.there[123", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello.there[123", &xo, ebuf,
 	    sizeof(ebuf)) == -1);
 	assert(strcmp(ebuf,
 	    "Array index is not terminated at \"hello.there[123\"") == 0);
@@ -173,7 +173,7 @@ main(int argc, char **argv)
 	strlcat(nbuf, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", sizeof(nbuf)); /*192*/
 	strlcat(nbuf, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", sizeof(nbuf)); /*256*/
 	strlcat(nbuf, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", sizeof(nbuf)); /*288*/
-	assert(xnamespace_lookup(ns, nbuf, &xo, ebuf,
+	assert(mnamespace_lookup(ns, nbuf, &xo, ebuf,
 	    sizeof(ebuf)) == -1);
 	assert(strcmp(ebuf,
 	    "Name \"XXXXXXXX...\" too long at \"hello.\"") == 0);
@@ -190,20 +190,20 @@ main(int argc, char **argv)
 	strlcat(nbuf, "99999999999999999999999999999999", sizeof(nbuf)); /*256*/
 	strlcat(nbuf, "99999999999999999999999999999999", sizeof(nbuf)); /*288*/
 	strlcat(nbuf, "]", sizeof(nbuf)); /*280*/
-	assert(xnamespace_lookup(ns, nbuf, &xo, ebuf,
+	assert(mnamespace_lookup(ns, nbuf, &xo, ebuf,
 	    sizeof(ebuf)) == -1);
 	assert(strcmp(ebuf,
 	    "Array index is too long at \"hello.there[\"") == 0);
 	printf(".");
 
 	/* Case 14: Array then array */
-	assert(xnamespace_lookup(ns, "hello.there[42].x.y.z[10][1]", &xo, ebuf,
+	assert(mnamespace_lookup(ns, "hello.there[42].x.y.z[10][1]", &xo, ebuf,
 	    sizeof(ebuf)) == 0);
 	assert(xo == z10_1);
 	printf(".");
 
 	/* Case 14: Array then array then dict! */
-	assert(xnamespace_lookup(ns, "hello.there[42].x.y.z[10][2].wow",
+	assert(mnamespace_lookup(ns, "hello.there[42].x.y.z[10][2].wow",
 	    &xo, ebuf, sizeof(ebuf)) == 0);
 	assert(xo == z10_2_wow);
 	printf(".");

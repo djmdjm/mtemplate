@@ -35,34 +35,38 @@ struct mtemplate;
  * Returns a compiled template on success, or NULL if parsing.failed. On
  * error, up to 'elen' bytes of error message will be written to 'ebuf'.
  */
-struct mtemplate *mtemplate_parse(const char *template,
-    char *ebuf, size_t elen);
+struct mtemplate *mtemplate_parse(const char *text, char *ebuf, size_t elen);
 
 /*
- * Run the pre-compiled template 't', with an libmobject dictionary
- * 'namespace'. Output will be written to 'out'.
+ * Frees a compiled template.
+ */
+void mtemplate_free(struct mtemplate *tmpl);
+
+/*
+ * Run the pre-compiled template 'tmpl', with an libmobject dictionary
+ * namespace 'ns'. Output will be written to 'out'.
  *
  * Returns a 0 on success, or -1 on failure. On failue, up to 'elen' bytes of
  * error message will be written to 'ebuf'.
  */
-int mtemplate_run_stdio(struct mtemplate *t, struct mobject *namespace,
+int mtemplate_run_stdio(struct mtemplate *tmpl, struct mobject *ns,
     FILE *out, char *ebuf, size_t elen);
 
 /*
- * Run the pre-compiled template 't', with an libmobject dictionary
- * 'namespace'. Output will be returned in a string buffer pointed to by
+ * Run the pre-compiled template 'tmpl', with an libmobject dictionary
+ * namespace 'ns'. Output will be returned in a string buffer pointed to by
  * 'outp'. It is the caller's responsibility to deallocate this buffer.
  *
  * Returns a 0 on success, or -1 on failure. On failue, up to 'elen' bytes of
  * error message will be written to 'ebuf'.
  */
 int
-mtemplate_run_mbuf(struct mtemplate *t, struct mobject *namespace, char **outp,
+mtemplate_run_mbuf(struct mtemplate *tmpl, struct mobject *ns, char **outp,
     char *ebuf, size_t elen);
 
 /*
- * Run the pre-compiled template 't', with an libmobject dictionary
- * 'namespace'. Output will occur via the 'out_cb' callback, which will be
+ * Run the pre-compiled template 'tmpl', with an libmobject dictionary
+ * namespace 'ns'. Output will occur via the 'out_cb' callback, which will be
  * called for each hunk of text that is generated. The 'out_ctx' argument is
  * passed through to the callback for context.
  *
@@ -75,7 +79,7 @@ mtemplate_run_mbuf(struct mtemplate *t, struct mobject *namespace, char **outp,
  * error message will be written to 'ebuf'.
  */
 int
-mtemplate_run_cb(struct mtemplate *t, struct mobject *namespace, char *ebuf,
+mtemplate_run_cb(struct mtemplate *tmpl, struct mobject *ns, char *ebuf,
     size_t elen, int (*out_cb)(const char *, void *), void *out_ctx);
 
 #endif /* _MTEMPLATE_H */

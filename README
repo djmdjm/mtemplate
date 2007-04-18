@@ -17,9 +17,6 @@ curly braces, for example "{{users.djm.history[5]}}". mtemplate uses the
 mobject namespace functions for variable substitutions - the syntax is
 similar to that of Python or Javascript.
 
-The directive opening sequence itself can be inserted using the "{{{{}}"
-escape sequence.
-
 Comments are supported as "{{#this is a comment}}" and are ignored when
 generating output.
 
@@ -51,6 +48,10 @@ array element at that position. When iterating over a libmobject dictionary,
 'key' will contain the dictionary key and 'value' the value referenced by that
 key. Please note that dictionary iteration does not guarantee any particular
 ordering.
+
+The directive opening sequence itself can be inserted using the "{{{{}}"
+escape sequence; any number of opening braces may be included in the escape
+sequence. For example "{{{}}" => "{", "{{{{{{{}}" => "{{{{{", etc.
 
 The "mtc" program can process mtemplate templates from the commandline. E.g.
 

@@ -59,8 +59,8 @@ define(struct mobject *namespace, const char *kv)
 	if ((v = mstring_new(cp + 1)) == NULL)
 		errx(1, "mstring_new failed");
 
-	if (xnamespace_set(namespace, kbuf, v, ebuf, sizeof(ebuf)) != 0)
-		errx(1, "xnamespace_set: %s", ebuf);
+	if (mnamespace_set(namespace, kbuf, v, ebuf, sizeof(ebuf)) != 0)
+		errx(1, "mnamespace_set: %s", ebuf);
 }
 
 int

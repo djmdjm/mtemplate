@@ -352,12 +352,12 @@ struct miteritem *miterator_next(struct miterator *iter);
  * Returns 0 on success, -1 on failure. On failure, up to "elen" characters
  * will be written into "ebuf" describing the error.
  */
-int xnamespace_lookup(struct mobject *ns, char *location, struct mobject **obj,
+int mnamespace_lookup(struct mobject *ns, char *location, struct mobject **obj,
     char *ebuf, size_t elen);
 
 /*
  * Sets the "location" in the namespace 'ns' to contain object "obj",
- * using the namespace syntax described for xnamespace_lookup. If no
+ * using the namespace syntax described for mnamespace_lookup. If no
  * path through the namespace already exists for the specified "location"
  * this function will create intervening arrays or dictionaries as
  * required. For example assigning an object to "a.b[10].c" will create
@@ -372,7 +372,7 @@ int xnamespace_lookup(struct mobject *ns, char *location, struct mobject **obj,
  * Returns 0 on success, -1 on failure. On failure, up to "elen" characters
  * will be written into "ebuf" describing the error.
  */ 
-int xnamespace_set(struct mobject *ns, char *location, struct mobject *obj,
+int mnamespace_set(struct mobject *ns, char *location, struct mobject *obj,
     char *ebuf, size_t elen);
 
 #endif /* _MOBJECT_H */

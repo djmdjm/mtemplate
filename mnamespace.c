@@ -28,13 +28,8 @@
 #include <stdarg.h>
 
 #include "mobject.h"
-#include "strlcat.h"
+#include "compat.h"
 #include "strstcpy.h"
-
-/* unbelievable that some systems lack this */
-#ifndef SIZE_T_MAX
-#define SIZE_T_MAX UINT_MAX
-#endif /* SIZE_T_MAX */
 
 #define MNAMESPACE_MAX_NAME_LENGTH		4096
 #define MNAMESPACE_MAX_ID_LENGTH		256
@@ -87,7 +82,7 @@ array_ndx(char *s, size_t *alen, size_t *skip, char **errp)
 		*errp = "Array index is not a number";
 		return -1;
 	}
-	if (llval < 0 || llval > SIZE_T_MAX) {
+	if (llval < 0 || llval > INT_MAX) {
 		*errp = "Array index is out of bounds";
 		return -1;
 	}
@@ -97,7 +92,7 @@ array_ndx(char *s, size_t *alen, size_t *skip, char **errp)
 
 /* XXX this really needs meaningful return codes */
 int
-xnamespace_lookup(struct mobject *ns, char *location, struct mobject **obj,
+mnamespace_lookup(struct mobject *ns, char *location, struct mobject **obj,
     char *ebuf, size_t elen)
 {
 	struct mobject *current = ns;
@@ -205,7 +200,7 @@ xalloc_by_typechar(int typechar, struct mobject **xop, char **namep)
 /* XXX this really needs meaningful return codes */
 /* XXX O gorgon! this is ugly code */
 int
-xnamespace_set(struct mobject *ns, char *location, struct mobject *obj,
+mnamespace_set(struct mobject *ns, char *location, struct mobject *obj,
     char *ebuf, size_t elen)
 {
 	struct mobject *current = ns;

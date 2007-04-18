@@ -28,20 +28,18 @@
 #include <vis.h>
 
 #include "sys-queue.h"
-#include "strlcpy.h"
+#include "compat.h"
 #include "mobject.h"
-
-/* unbelievable that some systems lack this */
-#ifndef SIZE_T_MAX
-#define SIZE_T_MAX UINT_MAX
-#endif /* SIZE_T_MAX */
 
 /*
  * Maximum number of entries in an array. NB. be careful - 
  * (MARRAY_MAX + 1 * sizeof(struct mobject *)) * 2 must be less than
  * SIZE_T_MAX to avoid int overflow
  */
-#define MARRAY_MAX	(1024 * 1024)
+#define MARRAY_MAX	(128 * 1024 * 1024)
+
+/* Maximum length of a string */
+#define MSTRING_MAX	(256 * 1024 * 1024)
 
 /* **** Private types **** */
 
@@ -136,7 +134,7 @@ mstring_new2(const u_char *value, size_t len)
 {
 	struct mstring *ret;
 
-	if (len > SIZE_T_MAX - 1)
+	if (len > MSTRING_MAX - 1)
 		return NULL;
 	if ((ret = calloc(1, sizeof(*ret))) == NULL)
 		return NULL;
@@ -282,14 +280,12 @@ mstring_to_string(const struct mstring *o, u_char *s, size_t len)
 		ve = vis(vbuf, o->value[i], VIS_OCTAL,
 		    (i + 1) < o->len ? 0 : o->value[i + 1]);
 		l = ve - vbuf;
-		if (!done && j + l + 1 <= len && j < SIZE_T_MAX - l - 1)
+		if (!done && j + l + 1 <= len)
 			memcpy(s + j, vbuf, l + 1);
 		else
 			done = 1;
 		/* Avoid integer wrap */
-		if (j >= SIZE_T_MAX - l - 1)
-			j = SIZE_T_MAX - 1;
-		else
+		if (j + l >= j)
 			j += l;
 	}
 	return j;
@@ -366,6 +362,7 @@ mobject_deepcopy(struct mobject *o)
 				goto mdict_deepcopy_err;
 			}
 		}
+		miterator_free(iter);
 		return new_obj;
 	default:
 		return NULL;

@@ -40,94 +40,109 @@ main(int argc, char **argv)
 	/* Case 2: Test trivial template execution */
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == 0);
 	assert(strcmp(o, "hello, world") == 0);
+	free(o);
 	printf(".");
 
-	/* XXX leak t */
+	/* Case 3: Free trivial template */
+	mtemplate_free(t);
+	printf(".");
 
-	/* Case 3: Test compilation of template with escape sequence */
-	t = mtemplate_parse("{{{{}}", NULL, 0);
+	/* Case 4: Test compilation of template with escape sequence */
+	t = mtemplate_parse("1{{{}} 2{{{{}} 3{{{{{}} 4{{{{{{}}", NULL, 0);
 	assert(t != NULL);
 	printf(".");
 
-	/* Case 4: Test trivial template execution */
+	/* Case 5: Test escape execution */
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == 0);
-	assert(strcmp(o, "{{") == 0);
+	assert(strcmp(o, "1{ 2{{ 3{{{ 4{{{{") == 0);
+	mtemplate_free(t);
+	free(o);
 	printf(".");
 
-	/* XXX leak t */
+	/* Case 6: Test bad syntax - escape prefix followed by junk */
+	t = mtemplate_parse("{{{crap}}", NULL, 0);
+	assert(t == NULL);
+	printf(".");
 
-	/* Case 5: Test compilation of template with basic substitutions */
+	/* Case 7: Test compilation of template with basic substitutions */
 	t = mtemplate_parse("ABC {{v1}} || {{v2}} XYZ", NULL, 0);
 	assert(t != NULL);
 	printf(".");
 
-	/* Case 6: Test error on namespace lookup fail */
+	/* Case 8: Test error on namespace lookup fail */
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == -1);
 	assert(mdict_insert_ss(namespace, "v1", "happy") == 0);
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == -1);
 	printf(".");
 
-	/* Case 7: Test basic substitution */
+	/* Case 9: Test basic substitution */
 	assert(mdict_insert_ss(namespace, "v2", "days!") == 0);
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == 0);
 	assert(strcmp(o, "ABC happy || days! XYZ") == 0);
+	free(o);
 	printf(".");
 
-	/* XXX leak t */
+	/* Case 10: Test free of template with substitution */
+	mtemplate_free(t);
+	printf(".");
 
-	/* Case 8: Test compilation of template with conditional */
+	/* Case 11: Test compilation of template with conditional */
 	t = mtemplate_parse("{{if v}}{{v1}}{{else}}{{v2}}{{endif}}",
 	    NULL, 0);
 	assert(t != NULL);
 	printf(".");
 
-	/* Case 9: Test failure with undefined conditional */
+	/* Case 12: Test failure with undefined conditional */
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == -1);
 	printf(".");
 
-	/* Case 10: Test conditional true */
+	/* Case 13: Test conditional true */
 	assert(mdict_insert_si(namespace, "v", 1) == 0);
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == 0);
 	assert(strcmp(o, "happy") == 0);
+	free(o);
 	printf(".");
 
-	/* Case 11: Test conditional false */
+	/* Case 14: Test conditional false */
 	assert(mdict_replace_si(namespace, "v", 0) == 0);
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == 0);
 	assert(strcmp(o, "days!") == 0);
+	free(o);
 	printf(".");
 
-	/* XXX leak t */
+	/* Case 15: Test free of template with conditional */
+	mtemplate_free(t);
+	printf(".");
 
-	/* Case 12: Test bad syntax - double else */
+	/* Case 16: Test bad syntax - double else */
 	t = mtemplate_parse("{{if v}}{{v1}}{{else}}{{v2}}{{else}}x{{endif}}",
 	    NULL, 0);
 	assert(t == NULL);
 	printf(".");
 
-	/* Case 13: Test bad syntax - double endif */
+	/* Case 17: Test bad syntax - double endif */
 	t = mtemplate_parse("{{if v}}{{v1}}{{else}}{{v2}}{{endif}}x{{endif}}",
 	    NULL, 0);
 	assert(t == NULL);
 	printf(".");
 
-	/* Case 14: Test bad syntax - unclosed if */
+	/* Case 18: Test bad syntax - unclosed if */
 	t = mtemplate_parse("{{if v}}{{v1}}{{else}}{{v2}}",
 	    NULL, 0);
 	assert(t == NULL);
 	printf(".");
 
-	/* Case 15: Test compilation of iteration */
+	/* Case 19: Test compilation of iteration */
 	t = mtemplate_parse("{{for x in v}}K:{{x.key}}V:{{x.value}} {{endfor}}",
 	    NULL, 0);
 	assert(t != NULL);
 	printf(".");
 
-	/* Case 16: Test failure when iterating over non-sequence */
+	/* Case 20: Test failure when iterating over non-sequence */
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == -1);
 	printf(".");
 
-	/* Case 17: iteration over array */
+	/* Case 21: iteration over array */
 	assert(mdict_replace_sa(namespace, "v") == 0);
 	assert((obj = mdict_item_s(namespace, "v")) != NULL);
 	assert(marray_append_s(obj, "wow") == 0);
@@ -136,9 +151,10 @@ main(int argc, char **argv)
 	assert(marray_append_i(obj, 765432) == 0);
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == 0);
 	assert(strcmp(o, "K:0V:wow K:1V:this K:2V:worked K:3V:765432 ") == 0);
+	free(o);
 	printf(".");
 
-	/* Case 18: iteration over dictionary */
+	/* Case 22: iteration over dictionary */
 	assert(mdict_replace_sd(namespace, "v") == 0);
 	assert((obj = mdict_item_s(namespace, "v")) != NULL);
 	assert(mdict_insert_ss(obj, "k1", "v1") == 0);
@@ -148,9 +164,13 @@ main(int argc, char **argv)
 	assert(strstr(o, "K:k1V:v1 ") != 0);
 	assert(strstr(o, "K:k2V:v2 ") != 0);
 	assert(strlen(o) == strlen("K:k2V:v2 K:k1V:v1 "));
+	free(o);
+	mobject_free(namespace);
 	printf(".");
 
-	/* XXX leak t */
+	/* Case 23: Test free of template with loop */
+	mtemplate_free(t);
+	printf(".");
 
 	/* Case 19: Test bad syntax - double endfor */
 	t = mtemplate_parse("{{for x in v}}K:{{x.key}} {{endfor}}{{endfor}}",

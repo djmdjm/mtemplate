@@ -1,16 +1,17 @@
-***** mtemplate *****
-	!!!critical!!! xtemplate_free() 
-	
+documentation
+  manpages
+  example templates
+
+
+***** mtemplate *****	
 	rewrite the parser using lex/yacc
 	
-	newline-eating parse mode
-	only if following line is a newline?
-	
-	output to string buffer
+	space-compacting/newline-eating parse or output mode
+		compact NL only if following line is a newline?
 	
 	conditional predicates
 	{{if a > b}}
-	probably needs yacc parser, maybe reuse moo?
+	probably needs yacc parser, maybe steal/reuse moo?
 	
 	set variables within templates
 	{{v = 10}}
@@ -21,7 +22,8 @@
 	
 	some builtin functions would be useful:
 	{{join(values(iterable.var, ", "))}}
-	{{for i in sort(iterable.var, "NVR")}} ("NVR" -> Numeric, by Value, Reverse)
+	{{for i in sort(iterable.var, "NVR")}}
+		("NVR" -> Numeric, by Value, Reverse)
 	
 	sorted iteration, in particular on dictionary keys
 	how to deal with different sort types?
@@ -35,20 +37,14 @@
 	nested escaping "{{a.b:hj}}"
 	smart automatic escaping based on HTML context
 	
-	xtc -Dvalue+=foo for array append
+	mtc -Dvalue+=foo for array append
 	
-	manpages
-	
-	comments in directives
+	whitespace and comments in directives
 	{{endif # something}}
 	
 	choice of delimiters
 	%%if foo%%
 	
-	Generic { escape:
-	{{{}} {{{{{}} 
-	i.e. any number of {'s after opening sequence but before closing sequence
-
 ***** mobject *****
 	xdict_set_default
 	
@@ -58,8 +54,6 @@
 	prevent modification of object while iterating (or abort iter)
 	refcounts
 	track object ownership (up-pointer)
-	
-	xdict_len -> number of items in dict
 	
 	recursive iteration
 	
@@ -77,8 +71,6 @@
 	
 	non-recursive (iterative) deallocation (depth-first?, maybe needs
 	ownership ptrs)
-	
-	rethink casting - should all *_new function return xobject?
 	
 	serialise to/from string in canonical encoding
 	
