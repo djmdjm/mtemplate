@@ -130,7 +130,7 @@ mint_new(int64_t v)
 }
 
 struct mobject *
-mstring_new2(const u_char *value, size_t len)
+mstring_new2(const u_int8_t *value, size_t len)
 {
 	struct mstring *ret;
 
@@ -154,9 +154,9 @@ mstring_new2(const u_char *value, size_t len)
 }
 
 struct mobject *
-mstring_new(const u_char *value)
+mstring_new(const char *value)
 {
-	return (struct mobject *)mstring_new2(value, strlen(value));
+	return mstring_new2((u_int8_t *)value, strlen(value));
 }
 
 struct mobject *
@@ -270,7 +270,7 @@ mobject_free(struct mobject *o)
 }
 
 static size_t
-mstring_to_string(const struct mstring *o, u_char *s, size_t len)
+mstring_to_string(const struct mstring *o, char *s, size_t len)
 {
 	char vbuf[5], *ve;
 	size_t i, j, l, done = 0;
@@ -292,7 +292,7 @@ mstring_to_string(const struct mstring *o, u_char *s, size_t len)
 }
 
 size_t
-mobject_to_string(const struct mobject *o, u_char *s, size_t len)
+mobject_to_string(const struct mobject *o, char *s, size_t len)
 {
 	switch (o->type) {
 	case TYPE_MNONE:

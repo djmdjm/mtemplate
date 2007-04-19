@@ -8,8 +8,6 @@ CFLAGS+=    -Wunused
 CFLAGS+=    -Wsign-compare
 #CFLAGS+=    -Wbounded
 CFLAGS+=    -Wshadow
-CFLAGS+=    -Wno-pointer-sign
-CFLAGS+=    -Wno-attributes
 
 CFLAGS+=    -g
 CFLAGS+=    -I..

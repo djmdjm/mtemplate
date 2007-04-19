@@ -13,7 +13,7 @@
 		const struct mobject *xo; \
 		assert((xo = marray_item(a, loc)) != NULL); \
 		assert(mobject_type(xo) == TYPE_MSTRING); \
-		assert(strcmp(mstring_ptr(xo), \
+		assert(strcmp((const char *)mstring_ptr(xo), \
 		    expect) == 0); \
 	} while (0)
 #define X_NONE_AT_ARRAY(a, loc) do { \
@@ -33,7 +33,7 @@
 		struct mobject *xo; \
 		assert((xo = marray_pop(a)) != NULL); \
 		assert(mobject_type(xo) == TYPE_MSTRING); \
-		assert(strcmp(mstring_ptr(xo), \
+		assert(strcmp((const char *)mstring_ptr(xo), \
 		    expect) == 0); \
 		mobject_free(xo); \
 	} while (0)
@@ -58,7 +58,7 @@
 		assert((xs = mstring_new(loc)) != NULL); \
 		assert((xo = mdict_item(d, xs)) != NULL); \
 		assert(mobject_type(xo) == TYPE_MSTRING); \
-		assert(strcmp(mstring_ptr(xo), \
+		assert(strcmp((const char *)mstring_ptr(xo), \
 		    expect) == 0); \
 		mobject_free(xs); \
 	} while (0)
@@ -122,7 +122,7 @@
 		assert(mobject_type(ii->key) == TYPE_MINT); \
 		assert(mobject_type(ii->value) == TYPE_MSTRING); \
 		assert(mint_value(ii->key) == k); \
-		assert(strcmp(mstring_ptr(ii->value), \
+		assert(strcmp((char *)mstring_ptr(ii->value), \
 		    v) == 0); \
 	} while (0)
 #define X_NONE_ARRAY_ITER(i, k) do { \

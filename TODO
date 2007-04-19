@@ -2,6 +2,9 @@ documentation
   manpages
   example templates
 
+"make install"
+
+shared library support
 
 ***** mtemplate *****	
 	rewrite the parser using lex/yacc

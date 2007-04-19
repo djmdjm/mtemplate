@@ -28,7 +28,9 @@ main(int argc, char **argv)
 	const struct mobject *o;
 	struct mobject *o2;
 	struct miterator *it;
-	char bin[10] = { 0x0, 0x1, 0xff, 'h', 'e', 'l', 'l', 'o', 0xf3, 0x0 };
+	u_int8_t bin[10] = {
+		0x0, 0x1, 0xff, 'h', 'e', 'l', 'l', 'o', 0xf3, 0x0
+	};
 	u_int seen, n;
 
 	/* Turn on all malloc debugging on OpenBSD */
@@ -88,7 +90,7 @@ main(int argc, char **argv)
 	mstring_obj = mstring_new("hello, world");
 	assert(mstring_obj != NULL);
 	assert(mstring_len(mstring_obj) == strlen("hello, world"));
-	assert(strcmp(mstring_ptr(mstring_obj), "hello, world") == 0);
+	assert(strcmp((char *)mstring_ptr(mstring_obj), "hello, world") == 0);
 	printf(".");
 
 	marray_obj = marray_new();
@@ -294,7 +296,7 @@ main(int argc, char **argv)
 	    (k = mstring_new("c")))) != NULL);
 	mobject_free(k);
 	assert(mobject_type(o2) == TYPE_MSTRING);
-	assert(strcmp(mstring_ptr(o2), "def") == 0);
+	assert(strcmp((char *)mstring_ptr(o2), "def") == 0);
 	mobject_free(o2);
 	assert((o2 = mdict_remove(mdict_obj,
 	    (k = mstring_new("e")))) != NULL);
@@ -401,12 +403,12 @@ main(int argc, char **argv)
 			break;
 		case 'b':
 			assert(mobject_type(ii->value) == TYPE_MSTRING);
-			assert(strcmp(mstring_ptr(ii->value),
+			assert(strcmp((const char *)mstring_ptr(ii->value),
 			    "abc") == 0);
 			break;
 		case 'c':
 			assert(mobject_type(ii->value) == TYPE_MSTRING);
-			assert(strcmp(mstring_ptr(ii->value),
+			assert(strcmp((const char *)mstring_ptr(ii->value),
 			    "def") == 0);
 			break;
 		case 'd':
@@ -431,11 +433,11 @@ main(int argc, char **argv)
 
 	/* Case 42: marray_set and implicit filling */
 	assert((marray_obj = marray_new()) != NULL);
-	assert((mstring_obj = mstring_new2("happy", 3)) != NULL);
+	assert((mstring_obj = mstring_new2((u_int8_t *)"happy", 3)) != NULL);
 	assert(marray_set(marray_obj, 5, mstring_obj) != -1);
-	assert((mstring_obj = mstring_new2("joyjoy", 2)) != NULL);
+	assert((mstring_obj = mstring_new2((u_int8_t *)"joyjoy", 2)) != NULL);
 	assert(marray_set(marray_obj, 3, mstring_obj) != -1);
-	assert((mstring_obj = mstring_new2("merry!", 5)) != NULL);
+	assert((mstring_obj = mstring_new2((u_int8_t *)"merry!", 5)) != NULL);
 	assert(marray_set(marray_obj, 3, mstring_obj) != -1);
 	assert(marray_len(marray_obj) == 6);
 	X_NONE_AT_ARRAY(marray_obj, 0);

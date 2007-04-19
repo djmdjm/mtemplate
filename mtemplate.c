@@ -534,7 +534,7 @@ render_mobject(struct mobject *o, u_int lnum, char *ebuf, size_t elen,
 	size_t need;
 
 	if (mobject_type(o) == TYPE_MSTRING) {
-		if (out_cb(mstring_ptr(o), out_ctx) != 0) {
+		if (out_cb((char *)mstring_ptr(o), out_ctx) != 0) {
 			format_err(lnum, ebuf, elen, "write error");
 			return -1;
 		}

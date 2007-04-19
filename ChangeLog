@@ -1,4 +1,8 @@
-20070417
+20070419
+ - (djm) Fix some warnings so I can turn off non-portable gcc warning
+   flags
+
+20070418
  - (djm) Move compat hacks into their own header, conditionalise
    compilation based on OS defines.
  - (djm) Implement xtemplate_free() + regress tests

@@ -63,7 +63,7 @@ struct mobject *mint_new(int64_t v);
  *
  * Returns: pointer to object or NULL on failure
  */
-struct mobject *mstring_new2(const u_char *value, size_t len);
+struct mobject *mstring_new2(const u_int8_t *value, size_t len);
 
 /*
  * Allocate and populate a new string object from the nul-terminated
@@ -74,7 +74,7 @@ struct mobject *mstring_new2(const u_char *value, size_t len);
  *
  * Returns: pointer to object or NULL on failure
  */
-struct mobject *mstring_new(const u_char *value);
+struct mobject *mstring_new(const char *value);
 
 /*
  * Allocate an empty array object
@@ -113,7 +113,7 @@ enum mobject_type mobject_type(const struct mobject *obj);
  * "s" if it was of unlimited size, up to SIZE_T_MAX and not including
  * the terminating nul byte. (same as strlcpy, snprintf)
  */
-size_t mobject_to_string(const struct mobject *o, u_char *s, size_t len);
+size_t mobject_to_string(const struct mobject *o, char *s, size_t len);
 
 /*
  * Makes "deep copy" copy of the specified object, recursively copying
@@ -143,7 +143,7 @@ size_t mstring_len(const struct mobject *s);
 /*
  * Returns a pointer to the data in the string object "s"
  */
-const u_char *mstring_ptr(const struct mobject *s);
+const u_int8_t *mstring_ptr(const struct mobject *s);
 
 /*
  * Prepends the object "object" to the array "array". All existing entries

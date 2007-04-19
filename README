@@ -53,11 +53,17 @@ The directive opening sequence itself can be inserted using the "{{{{}}"
 escape sequence; any number of opening braces may be included in the escape
 sequence. For example "{{{}}" => "{", "{{{{{{{}}" => "{{{{{", etc.
 
-The "mtc" program can process mtemplate templates from the commandline. E.g.
+The "mtc" program can process mtemplate templates from the commandline.
+It is mainly intended as a test/demo of mtemplate, but you might find it
+useful. An example invocation:
 
         mtc -Dusers.djm.name="Damien Miller" -Dusers.djm.uid=12345 \
             -Dusers.djm.groups[0]=djm -Dusers.djm.groups[1]=users \
             -o example.out example.x
+
+To build mtemplate, just run "make". There are a bunch of regression
+tests for mtemplate, mobject and some infrastructure bits; they may be
+run through "make tests".
 
 Damien Miller <djm@mindrot.org> 2007-04-06
 
