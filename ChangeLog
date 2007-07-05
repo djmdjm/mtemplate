@@ -1,3 +1,6 @@
+20070705
+ - (djm) Copyright year in all notices
+
 20070419
  - (djm) Fix some warnings so I can turn off non-portable gcc warning
    flags
