@@ -23,30 +23,46 @@
 
 /* XXX: this is all mechanical, move most of it to #defines */
 
-int
+struct mobject *
 marray_append_s(struct mobject *array, const char *v)
 {
 	struct mobject *tmp;
-	int r;
 
-	if ((tmp = (struct mobject *)mstring_new(v)) == NULL)
-		return -1;
-	if ((r = marray_append(array, tmp)) == -1)
+	if ((tmp = mstring_new(v)) == NULL)
+		return NULL;
+	if (marray_append(array, tmp) == -1) {
 		mobject_free(tmp);
-	return r;
+		return NULL;
+	}
+	return tmp;
 }
 
-int
+struct mobject *
+marray_append_d(struct mobject *array, const char *v)
+{
+	struct mobject *tmp;
+
+	if ((tmp = mdict_new()) == NULL)
+		return NULL;
+	if (marray_append(array, tmp) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
+}
+
+struct mobject *
 marray_append_i(struct mobject *array, int64_t v)
 {
 	struct mobject *tmp;
-	int r;
 
-	if ((tmp = (struct mobject *)mint_new(v)) == NULL)
-		return -1;
-	if ((r = marray_append(array, tmp)) == -1)
+	if ((tmp = mint_new(v)) == NULL)
+		return NULL;
+	if (marray_append(array, tmp) == -1) {
 		mobject_free(tmp);
-	return r;
+		return NULL;
+	}
+	return tmp;
 }
 
 struct mobject *
@@ -58,7 +74,7 @@ mdict_item_s(const struct mobject *dict, const char *key)
 	if ((tmp = mstring_new(key)) == NULL)
 		return NULL;
 	r = mdict_item(dict, tmp);
-	mobject_free((struct mobject *)tmp);
+	mobject_free(tmp);
 	return r;
 }
 
@@ -71,7 +87,7 @@ mdict_remove_s(struct mobject *dict, const char *key)
 	if ((tmp = mstring_new(key)) == NULL)
 		return NULL;
 	r = mdict_remove(dict, tmp);
-	mobject_free((struct mobject *)tmp);
+	mobject_free(tmp);
 	return r;
 }
 
@@ -84,162 +100,174 @@ mdict_delete_s(struct mobject *dict, const char *key)
 	if ((tmp = mstring_new(key)) == NULL)
 		return -1;
 	r = mdict_delete(dict, tmp);
-	mobject_free((struct mobject *)tmp);
+	mobject_free(tmp);
 	return r;
 }
 
-int
+struct mobject *
 mdict_insert_s(struct mobject *dict, const char *key, struct mobject *value)
 {
 	struct mobject *tmp;
-	int r;
 
 	if ((tmp = mstring_new(key)) == NULL)
-		return -1;
-	if ((r = mdict_insert(dict, tmp, value)) == -1)
-		mobject_free((struct mobject *)tmp);
-	return r;
+		return NULL;
+	if (mdict_insert(dict, tmp, value) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
 }
 
-int
+struct mobject *
 mdict_insert_ss(struct mobject *dict, const char *key, const char *value)
 {
 	struct mobject *tmp;
-	int r;
 
 	if ((tmp = mstring_new(value)) == NULL)
-		return -1;
-	if ((r = mdict_insert_s(dict, key, (struct mobject *)tmp)) == -1)
-		mobject_free((struct mobject *)tmp);
-	return r;
+		return NULL;
+	if (mdict_insert_s(dict, key, tmp) == NULL) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
 }
 
-int 
+struct mobject *
 mdict_insert_si(struct mobject *dict, const char *key, int64_t value)
 {
 	struct mobject *tmp;
-	int r;
 
 	if ((tmp = mint_new(value)) == NULL)
-		return -1;
-	if ((r = mdict_insert_s(dict, key, (struct mobject *)tmp)) == -1)
-		mobject_free((struct mobject *)tmp);
-	return r;
+		return NULL;
+	if (mdict_insert_s(dict, key, tmp) == NULL) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
 }
 
-int
+struct mobject *
 mdict_insert_sd(struct mobject *dict, const char *key)
 {
 	struct mobject *tmp;
-	int r;
 
 	if ((tmp = mdict_new()) == NULL)
-		return -1;
-	if ((r = mdict_insert_s(dict, key, (struct mobject *)tmp)) == -1)
-		mobject_free((struct mobject *)tmp);
-	return r;
+		return NULL;
+	if (mdict_insert_s(dict, key, tmp) == NULL) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
 }
 
-int
+struct mobject *
 mdict_insert_sa(struct mobject *dict, const char *key)
 {
 	struct mobject *tmp;
-	int r;
 
 	if ((tmp = marray_new()) == NULL)
-		return -1;
-	if ((r = mdict_insert_s(dict, key, (struct mobject *)tmp)) == -1)
-		mobject_free((struct mobject *)tmp);
-	return r;
+		return NULL;
+	if (mdict_insert_s(dict, key, tmp) == NULL) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
 }
 
-int
+struct mobject *
 mdict_insert_sn(struct mobject *dict, const char *key)
 {
 	struct mobject *tmp;
-	int r;
 
 	if ((tmp = mnone_new()) == NULL)
-		return -1;
-	if ((r = mdict_insert_s(dict, key, (struct mobject *)tmp)) == -1)
-		mobject_free((struct mobject *)tmp);
-	return r;
+		return NULL;
+	if (mdict_insert_s(dict, key, tmp) == NULL) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
 }
 
-int
+struct mobject *
 mdict_replace_s(struct mobject *dict, const char *key, struct mobject *value)
 {
 	struct mobject *tmp;
-	int r;
 
 	if ((tmp = mstring_new(key)) == NULL)
-		return -1;
-	if ((r = mdict_replace(dict, tmp, value)) == -1)
-		mobject_free((struct mobject *)tmp);
-	return r;
+		return NULL;
+	if (mdict_replace(dict, tmp, value) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
 }
 
-int
+struct mobject *
 mdict_replace_ss(struct mobject *dict, const char *key, const char *value)
 {
 	struct mobject *tmp;
-	int r;
 
 	if ((tmp = mstring_new(value)) == NULL)
-		return -1;
-	if ((r = mdict_replace_s(dict, key, (struct mobject *)tmp)) == -1)
-		mobject_free((struct mobject *)tmp);
-	return r;
+		return NULL;
+	if (mdict_replace_s(dict, key, tmp) == NULL) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
 }
 
-int
+struct mobject *
 mdict_replace_si(struct mobject *dict, const char *key, int64_t value)
 {
 	struct mobject *tmp;
-	int r;
 
 	if ((tmp = mint_new(value)) == NULL)
-		return -1;
-	if ((r = mdict_replace_s(dict, key, (struct mobject *)tmp)) == -1)
-		mobject_free((struct mobject *)tmp);
-	return r;
+		return NULL;
+	if (mdict_replace_s(dict, key, tmp) == NULL) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
 }
 
-int
+struct mobject *
 mdict_replace_sd(struct mobject *dict, const char *key)
 {
 	struct mobject *tmp;
-	int r;
 
 	if ((tmp = mdict_new()) == NULL)
-		return -1;
-	if ((r = mdict_replace_s(dict, key, (struct mobject *)tmp)) == -1)
-		mobject_free((struct mobject *)tmp);
-	return r;
+		return NULL;
+	if (mdict_replace_s(dict, key, tmp) == NULL) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
 }
 
-int
+struct mobject *
 mdict_replace_sa(struct mobject *dict, const char *key)
 {
 	struct mobject *tmp;
-	int r;
 
 	if ((tmp = marray_new()) == NULL)
-		return -1;
-	if ((r = mdict_replace_s(dict, key, (struct mobject *)tmp)) == -1)
-		mobject_free((struct mobject *)tmp);
-	return r;
+		return NULL;
+	if (mdict_replace_s(dict, key, tmp) == NULL) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
 }
 
-int
+struct mobject *
 mdict_replace_sn(struct mobject *dict, const char *key)
 {
 	struct mobject *tmp;
-	int r;
 
 	if ((tmp = mnone_new()) == NULL)
-		return -1;
-	if ((r = mdict_replace_s(dict, key, (struct mobject *)tmp)) == -1)
-		mobject_free((struct mobject *)tmp);
-	return r;
+		return NULL;
+	if (mdict_replace_s(dict, key, tmp) == NULL) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
 }

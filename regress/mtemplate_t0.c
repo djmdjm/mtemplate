@@ -71,12 +71,12 @@ main(int argc, char **argv)
 
 	/* Case 8: Test error on namespace lookup fail */
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == -1);
-	assert(mdict_insert_ss(namespace, "v1", "happy") == 0);
+	assert(mdict_insert_ss(namespace, "v1", "happy") != NULL);
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == -1);
 	printf(".");
 
 	/* Case 9: Test basic substitution */
-	assert(mdict_insert_ss(namespace, "v2", "days!") == 0);
+	assert(mdict_insert_ss(namespace, "v2", "days!") != NULL);
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == 0);
 	assert(strcmp(o, "ABC happy || days! XYZ") == 0);
 	free(o);
@@ -97,14 +97,14 @@ main(int argc, char **argv)
 	printf(".");
 
 	/* Case 13: Test conditional true */
-	assert(mdict_insert_si(namespace, "v", 1) == 0);
+	assert(mdict_insert_si(namespace, "v", 1) != NULL);
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == 0);
 	assert(strcmp(o, "happy") == 0);
 	free(o);
 	printf(".");
 
 	/* Case 14: Test conditional false */
-	assert(mdict_replace_si(namespace, "v", 0) == 0);
+	assert(mdict_replace_si(namespace, "v", 0) != NULL);
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == 0);
 	assert(strcmp(o, "days!") == 0);
 	free(o);
@@ -143,22 +143,22 @@ main(int argc, char **argv)
 	printf(".");
 
 	/* Case 21: iteration over array */
-	assert(mdict_replace_sa(namespace, "v") == 0);
+	assert(mdict_replace_sa(namespace, "v") != NULL);
 	assert((obj = mdict_item_s(namespace, "v")) != NULL);
-	assert(marray_append_s(obj, "wow") == 0);
-	assert(marray_append_s(obj, "this") == 0);
-	assert(marray_append_s(obj, "worked") == 0);
-	assert(marray_append_i(obj, 765432) == 0);
+	assert(marray_append_s(obj, "wow") != NULL);
+	assert(marray_append_s(obj, "this") != NULL);
+	assert(marray_append_s(obj, "worked") != NULL);
+	assert(marray_append_i(obj, 765432) != NULL);
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == 0);
 	assert(strcmp(o, "K:0V:wow K:1V:this K:2V:worked K:3V:765432 ") == 0);
 	free(o);
 	printf(".");
 
 	/* Case 22: iteration over dictionary */
-	assert(mdict_replace_sd(namespace, "v") == 0);
+	assert(mdict_replace_sd(namespace, "v") != NULL);
 	assert((obj = mdict_item_s(namespace, "v")) != NULL);
-	assert(mdict_insert_ss(obj, "k1", "v1") == 0);
-	assert(mdict_insert_ss(obj, "k2", "v2") == 0);
+	assert(mdict_insert_ss(obj, "k1", "v1") != NULL);
+	assert(mdict_insert_ss(obj, "k2", "v2") != NULL);
 	assert(mtemplate_run_mbuf(t, namespace, &o, NULL, 0) == 0);
 	/* Dictionary iteration doesn't guarantee order */
 	assert(strstr(o, "K:k1V:v1 ") != 0);

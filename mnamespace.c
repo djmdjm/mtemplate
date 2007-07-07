@@ -239,7 +239,7 @@ mnamespace_set(struct mobject *ns, char *location, struct mobject *obj,
 
 		/* We are at the end of the string, insert the object here */
 		if (type == '\0') {
-			if (mdict_replace_s(current, name, obj) == -1) {
+			if (mdict_replace_s(current, name, obj) == NULL) {
 				format_err(o, location, ebuf, elen,
 					"mdict_insert_s failed");
 				return -1;
@@ -253,7 +253,7 @@ mnamespace_set(struct mobject *ns, char *location, struct mobject *obj,
 				format_err(o, location, ebuf, elen, "%s", cp);
 				return -1;
 			}
-			if (mdict_replace_s(current, name, next) == -1) {
+			if (mdict_replace_s(current, name, next) == NULL) {
 				format_err(o, location, ebuf, elen,
 				    "mdict_insert_s failed");
 				return -1;

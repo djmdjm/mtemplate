@@ -508,13 +508,13 @@ do_loop(struct mtemplate_node *n, struct miteritem *item,
 		format_err(n->lnum, ebuf, elen, "Loop value copy failed");
 		return -1;
 	}
-	if (mdict_replace_s(loopvar, "key", k) == -1) {
+	if (mdict_replace_s(loopvar, "key", k) == NULL) {
 		mobject_free(k);
 		mobject_free(v);
 		format_err(n->lnum, ebuf, elen, "Loop key insert failed");
 		return -1;
 	}
-	if (mdict_replace_s(loopvar, "value", v) == -1) {
+	if (mdict_replace_s(loopvar, "value", v) == NULL) {
 		mobject_free(v);
 		format_err(n->lnum, ebuf, elen, "Loop value insert failed");
 		return -1;
@@ -617,7 +617,7 @@ mtemplate_run_nodes(struct mtemplate_nodes *nodes, struct mobject *ns,
 				return -1;
 			}
 			/* Create the loop variable in this frame */
-			if (mdict_replace_sd(frame, n->localvar) == -1) {
+			if (mdict_replace_sd(frame, n->localvar) == NULL) {
 				format_err(n->lnum, ebuf, elen,
 				    "Could not setup loop variable");
 				mobject_free(frame);

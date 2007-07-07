@@ -1,3 +1,7 @@
+20070707
+ - (djm) API change: make all convenience functions return a pointer to
+   the created object
+
 20070705
  - (djm) Copyright year in all notices
 

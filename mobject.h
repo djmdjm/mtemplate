@@ -169,8 +169,9 @@ int marray_prepend(struct mobject *array, struct mobject *object);
  * Returns 0 on success, -1 on failure
  */
 int marray_append(struct mobject *array, struct mobject *object);
-int marray_append_s(struct mobject *array, const char *v);
-int marray_append_i(struct mobject *array, int64_t v);
+struct mobject *marray_append_s(struct mobject *array, const char *v);
+struct mobject *marray_append_d(struct mobject *array, const char *v);
+struct mobject *marray_append_i(struct mobject *array, int64_t v);
 
 /*
  * Sets entry "ndx" of array "array" to object "object". Any existing object
@@ -283,13 +284,15 @@ int mdict_delete_s(struct mobject *dict, const char *key);
  */
 int mdict_insert(struct mobject *dict, struct mobject *key,
     struct mobject *value);
-int mdict_insert_s(struct mobject *dict, const char *key,
+struct mobject *mdict_insert_s(struct mobject *dict, const char *key,
     struct mobject *value);
-int mdict_insert_ss(struct mobject *dict, const char *key, const char *value);
-int mdict_insert_si(struct mobject *dict, const char *key, int64_t value);
-int mdict_insert_sa(struct mobject *dict, const char *key);
-int mdict_insert_sd(struct mobject *dict, const char *key);
-int mdict_insert_sn(struct mobject *dict, const char *key);
+struct mobject *mdict_insert_ss(struct mobject *dict, const char *key,
+    const char *value);
+struct mobject *mdict_insert_si(struct mobject *dict, const char *key,
+    int64_t value);
+struct mobject *mdict_insert_sa(struct mobject *dict, const char *key);
+struct mobject *mdict_insert_sd(struct mobject *dict, const char *key);
+struct mobject *mdict_insert_sn(struct mobject *dict, const char *key);
 
 /*
  * Insert an item identified by "key" of value "value" into
@@ -305,13 +308,15 @@ int mdict_insert_sn(struct mobject *dict, const char *key);
  */
 int mdict_replace(struct mobject *dict, struct mobject *key,
     struct mobject *value);
-int mdict_replace_s(struct mobject *dict, const char *key,
+struct mobject *mdict_replace_s(struct mobject *dict, const char *key,
     struct mobject *value);
-int mdict_replace_ss(struct mobject *dict, const char *key, const char *value);
-int mdict_replace_si(struct mobject *dict, const char *key, int64_t value);
-int mdict_replace_sa(struct mobject *dict, const char *key);
-int mdict_replace_sd(struct mobject *dict, const char *key);
-int mdict_replace_sn(struct mobject *dict, const char *key);
+struct mobject *mdict_replace_ss(struct mobject *dict, const char *key,
+    const char *value);
+struct mobject *mdict_replace_si(struct mobject *dict, const char *key,
+    int64_t value);
+struct mobject *mdict_replace_sa(struct mobject *dict, const char *key);
+struct mobject *mdict_replace_sd(struct mobject *dict, const char *key);
+struct mobject *mdict_replace_sn(struct mobject *dict, const char *key);
 
 /*
  * Returns the number of items in a dictionary

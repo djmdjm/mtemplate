@@ -95,9 +95,6 @@ shared library support
 	range iterator
 	xobject_getiter_range(0, 1000)
 	
-	convenience functions return pointer to inserted object
-	xdict_insert_sd(d, k, &newp)
-	
 	xdict_insert_scopy(d, k, obj)
 
 $Id$

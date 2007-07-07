@@ -58,4 +58,4 @@ mtemplate_t0: mtemplate_t0.o ../libmtemplate.a
 	$(CC) -o $@ mtemplate_t0.o $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f *.o $(BIN_TARGETS) core *.core
+	rm -f *.o $(BIN_TARGETS) core *.core *~

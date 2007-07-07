@@ -37,10 +37,10 @@ main(int argc, char **argv)
 	assert((ns = xd = mdict_new()) != NULL);
 	assert((xd2 = mdict_new()) != NULL);
 	hello = xd2;
-	assert(mdict_insert_s(xd, "hello", xd2) == 0);
+	assert(mdict_insert_s(xd, "hello", xd2) != NULL);
 	assert((xa = marray_new()) != NULL);
 	there = xa;
-	assert(mdict_insert_s(xd2, "there", xa) == 0);
+	assert(mdict_insert_s(xd2, "there", xa) != NULL);
 
 	for (i = 0; i < 43; i++) {
 		assert((xd2 = mdict_new()) != NULL);
@@ -49,11 +49,11 @@ main(int argc, char **argv)
 	there42 = xd2;
 
 	assert((xd = mdict_new()) != NULL);
-	assert(mdict_insert_s(xd2, "x", xd) == 0);
+	assert(mdict_insert_s(xd2, "x", xd) != NULL);
 	assert((xd2 = mdict_new()) != NULL);
-	assert(mdict_insert_s(xd, "y", xd2) == 0);
+	assert(mdict_insert_s(xd, "y", xd2) != NULL);
 	assert((xa = marray_new()) != NULL);
-	assert(mdict_insert_s(xd2, "z", xa) == 0);
+	assert(mdict_insert_s(xd2, "z", xa) != NULL);
 
 	for (i = 0; i < 30; i++) {
 		if (i == 10) {
@@ -66,7 +66,7 @@ main(int argc, char **argv)
 			z10_1 = xi;
 			assert((xd = mdict_new()) != NULL);
 			assert(marray_append(xa2, xd) == 0);
-			assert(mdict_insert_ss(xd, "wow", "indeed") == 0);
+			assert(mdict_insert_ss(xd, "wow", "indeed") != NULL);
 			assert((z10_2_wow = mdict_item_s(xd, "wow")) != NULL);
 			continue;
 		}

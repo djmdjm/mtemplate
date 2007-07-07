@@ -29,7 +29,7 @@ mtc: mtc.o libmtemplate.a
 	$(CC) -o $@ mtc.o $(LDFLAGS) -lmtemplate
 
 clean:
-	rm -f *.o $(TARGETS) core *.core
+	rm -f *.o $(TARGETS) core *.core *~
 	cd regress && make clean
 
 test: all
