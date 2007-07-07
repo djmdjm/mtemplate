@@ -16,10 +16,10 @@ LDFLAGS=-g
 LIBS=../libmtemplate.a
 
 BIN_TARGETS=	t_strstcpy
-BIN_TARGETS+=	mobject_t0 mobject_t1 mobject_t2
+BIN_TARGETS+=	mobject_t0 mobject_t1 mobject_t2 mobject_t3
 BIN_TARGETS+=	mtemplate_t0
 EXEC_TARGETS=	t_strstcpy_exec
-EXEC_TARGETS+=	mobject_t0_exec mobject_t1_exec mobject_t2_exec
+EXEC_TARGETS+=	mobject_t0_exec mobject_t1_exec mobject_t2_exec mobject_t3_exec
 EXEC_TARGETS+=	mtemplate_t0_exec
 
 all: $(LIBS) $(BIN_TARGETS) t_start $(EXEC_TARGETS)
@@ -44,6 +44,12 @@ mobject_t2_exec: mobject_t2
 
 mobject_t2: mobject_t2.o $(LIBS) 
 	$(CC) -o $@ mobject_t2.o $(LDFLAGS) $(LIBS)
+
+mobject_t3_exec: mobject_t3
+	@./mobject_t3
+
+mobject_t3: mobject_t3.o $(LIBS) 
+	$(CC) -o $@ mobject_t3.o $(LDFLAGS) $(LIBS)
 
 t_strstcpy_exec: t_strstcpy
 	@./t_strstcpy

@@ -38,11 +38,39 @@ marray_append_s(struct mobject *array, const char *v)
 }
 
 struct mobject *
-marray_append_d(struct mobject *array, const char *v)
+marray_append_d(struct mobject *array)
 {
 	struct mobject *tmp;
 
 	if ((tmp = mdict_new()) == NULL)
+		return NULL;
+	if (marray_append(array, tmp) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
+}
+
+struct mobject *
+marray_append_a(struct mobject *array)
+{
+	struct mobject *tmp;
+
+	if ((tmp = marray_new()) == NULL)
+		return NULL;
+	if (marray_append(array, tmp) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
+}
+
+struct mobject *
+marray_append_n(struct mobject *array)
+{
+	struct mobject *tmp;
+
+	if ((tmp = mnone_new()) == NULL)
 		return NULL;
 	if (marray_append(array, tmp) == -1) {
 		mobject_free(tmp);
@@ -59,6 +87,76 @@ marray_append_i(struct mobject *array, int64_t v)
 	if ((tmp = mint_new(v)) == NULL)
 		return NULL;
 	if (marray_append(array, tmp) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
+}
+
+struct mobject *
+marray_prepend_s(struct mobject *array, const char *v)
+{
+	struct mobject *tmp;
+
+	if ((tmp = mstring_new(v)) == NULL)
+		return NULL;
+	if (marray_prepend(array, tmp) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
+}
+
+struct mobject *
+marray_prepend_d(struct mobject *array)
+{
+	struct mobject *tmp;
+
+	if ((tmp = mdict_new()) == NULL)
+		return NULL;
+	if (marray_prepend(array, tmp) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
+}
+
+struct mobject *
+marray_prepend_a(struct mobject *array)
+{
+	struct mobject *tmp;
+
+	if ((tmp = marray_new()) == NULL)
+		return NULL;
+	if (marray_prepend(array, tmp) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
+}
+
+struct mobject *
+marray_prepend_n(struct mobject *array)
+{
+	struct mobject *tmp;
+
+	if ((tmp = mnone_new()) == NULL)
+		return NULL;
+	if (marray_prepend(array, tmp) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
+}
+
+struct mobject *
+marray_prepend_i(struct mobject *array, int64_t v)
+{
+	struct mobject *tmp;
+
+	if ((tmp = mint_new(v)) == NULL)
+		return NULL;
+	if (marray_prepend(array, tmp) == -1) {
 		mobject_free(tmp);
 		return NULL;
 	}
@@ -271,3 +369,74 @@ mdict_replace_sn(struct mobject *dict, const char *key)
 	}
 	return tmp;
 }
+
+struct mobject *
+marray_set_s(struct mobject *array, size_t ndx, char *s)
+{
+	struct mobject *tmp;
+
+	if ((tmp = mstring_new(s)) == NULL)
+		return NULL;
+	if (marray_set(array, ndx, tmp) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
+}
+
+struct mobject *
+marray_set_i(struct mobject *array, size_t ndx, int64_t i)
+{
+	struct mobject *tmp;
+
+	if ((tmp = mint_new(i)) == NULL)
+		return NULL;
+	if (marray_set(array, ndx, tmp) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
+}
+
+struct mobject *
+marray_set_d(struct mobject *array, size_t ndx)
+{
+	struct mobject *tmp;
+
+	if ((tmp = mdict_new()) == NULL)
+		return NULL;
+	if (marray_set(array, ndx, tmp) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
+}
+
+struct mobject *
+marray_set_a(struct mobject *array, size_t ndx)
+{
+	struct mobject *tmp;
+
+	if ((tmp = marray_new()) == NULL)
+		return NULL;
+	if (marray_set(array, ndx, tmp) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
+}
+
+struct mobject *
+marray_set_n(struct mobject *array, size_t ndx)
+{
+	struct mobject *tmp;
+
+	if ((tmp = mnone_new()) == NULL)
+		return NULL;
+	if (marray_set(array, ndx, tmp) == -1) {
+		mobject_free(tmp);
+		return NULL;
+	}
+	return tmp;
+}
+

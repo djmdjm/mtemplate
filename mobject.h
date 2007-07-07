@@ -26,8 +26,8 @@
 
 enum mobject_type {
 	TYPE_MNONE,
-	TYPE_MSTRING,
 	TYPE_MINT,
+	TYPE_MSTRING,
 	TYPE_MARRAY,
 	TYPE_MDICT,
 };
@@ -157,7 +157,11 @@ const u_int8_t *mstring_ptr(const struct mobject *s);
  * Returns 0 on success, -1 on failure
  */
 int marray_prepend(struct mobject *array, struct mobject *object);
-
+struct mobject *marray_prepend_s(struct mobject *array, const char *v);
+struct mobject *marray_prepend_i(struct mobject *array, int64_t v);
+struct mobject *marray_prepend_d(struct mobject *array);
+struct mobject *marray_prepend_a(struct mobject *array);
+struct mobject *marray_prepend_n(struct mobject *array);
 /*
  * Appends the object "object" to the array "array". The object will
  * be accessible at index (marray_len(array) - 1).
@@ -170,8 +174,10 @@ int marray_prepend(struct mobject *array, struct mobject *object);
  */
 int marray_append(struct mobject *array, struct mobject *object);
 struct mobject *marray_append_s(struct mobject *array, const char *v);
-struct mobject *marray_append_d(struct mobject *array, const char *v);
 struct mobject *marray_append_i(struct mobject *array, int64_t v);
+struct mobject *marray_append_d(struct mobject *array);
+struct mobject *marray_append_a(struct mobject *array);
+struct mobject *marray_append_n(struct mobject *array);
 
 /*
  * Sets entry "ndx" of array "array" to object "object". Any existing object
@@ -186,6 +192,11 @@ struct mobject *marray_append_i(struct mobject *array, int64_t v);
  * Returns 0 on success, -1 on failure
  */
 int marray_set(struct mobject *array, size_t ndx, struct mobject *object);
+struct mobject *marray_set_s(struct mobject *array, size_t ndx, char *s);
+struct mobject *marray_set_i(struct mobject *array, size_t ndx, int64_t i);
+struct mobject *marray_set_d(struct mobject *array, size_t ndx);
+struct mobject *marray_set_a(struct mobject *array, size_t ndx);
+struct mobject *marray_set_n(struct mobject *array, size_t ndx);
 
 /*
  * Returns the number of entries in the array "array"
@@ -341,6 +352,20 @@ void miterator_free(struct miterator *iter);
  * values are available.
  */
 struct miteritem *miterator_next(struct miterator *iter);
+
+/*
+ * Compare two objects. Returns -1 if object 'a' is less than object 'b',
+ * 1 if object 'a' is greater than object 'b' or 0 if they are equal.
+ * Comparison rules:
+ *   None object are always equal.
+ *   Integer object are compared numerically.
+ *   Strings are compared with case sensitivity.
+ *   Arrays are compared first by the number of elements that they hold, then
+ *   elementwise.
+ *   Dictionaries are compared by identity (address).
+ */
+int mobject_cmp(const struct mobject *a, const struct mobject *b);
+
 
 /*
  * Look up a name in a dictionary namespace. Names may combine dictionary

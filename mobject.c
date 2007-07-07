@@ -566,6 +566,49 @@ marray_item(struct mobject *_array, size_t ndx)
 }
 
 static int
+mobject_cmp_byaddr(const struct mobject *a, const struct mobject *b)
+{
+	if (a == b)
+		return 0;
+	return a < b ? -1 : 1;
+}
+
+static int
+marray_cmp(const struct mobject *_a, const struct mobject *_b)
+{
+	struct marray *a = (struct marray *)_a;
+	struct marray *b = (struct marray *)_b;
+	size_t i;
+	int r;
+
+	if (a->nused != b->nused)
+		return a->nused < b->nused ? -1 : 1;
+	for (i = 0; i < a->nused; i++) {
+		if (a->entries[i] == NULL) {
+			if (b->entries[i] == NULL)
+				continue;
+			return -1;
+		}
+		if (b->entries[i] == NULL)
+			return 1;
+		if ((r = mobject_cmp(a->entries[i], b->entries[i])) != 0)
+			return r;
+	}
+	return 0;
+}
+
+static int
+mint_cmp(const struct mobject *_a, const struct mobject *_b)
+{
+	struct mint *a = (struct mint *)_a;
+	struct mint *b = (struct mint *)_b;
+
+	if (a->value == b->value)
+		return 0;
+	return a->value < b->value ? -1 : 1;
+}
+
+static int
 mstring_cmp(const struct mobject *_a, const struct mobject *_b)
 {
 	struct mstring *a = (struct mstring *)_a;
@@ -585,6 +628,30 @@ mstring_cmp(const struct mobject *_a, const struct mobject *_b)
 	if (b->len > a->len)
 		return -1;
 	return 0;
+}
+
+int
+mobject_cmp(const struct mobject *a, const struct mobject *b)
+{
+	if (a == b)
+		return 0;
+	if (a->type == b->type) {
+		switch (a->type) {
+		case TYPE_MNONE:
+			return 0;
+		case TYPE_MINT:
+			return mint_cmp(a, b);
+		case TYPE_MSTRING:
+			return mstring_cmp(a, b);
+		case TYPE_MARRAY:
+			return marray_cmp(a, b);
+		case TYPE_MDICT:
+			return mobject_cmp_byaddr(a, b);
+		default:
+			return 0;
+		}
+	}
+	return a->type < b->type ? -1 : 1;
 }
 
 struct mobject *
