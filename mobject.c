@@ -622,7 +622,7 @@ mstring_cmp(const struct mobject *_a, const struct mobject *_b)
 	if (b->len == 0)
 		return 1;
 	if ((r = memcmp(a->value, b->value, MIN(a->len, b->len))) != 0)
-		return r;
+		return r < 0 ? -1 : (r > 0 ? 1 : 0);
 	if (a->len > b->len)
 		return 1;
 	if (b->len > a->len)

@@ -1,3 +1,6 @@
+20111001
+ - (djm) Fix string compare bug
+
 20070707
  - (djm) API change: make all convenience functions return a pointer to
    the created object
