@@ -430,7 +430,7 @@ mtemplate_free_nodes(struct mtemplate_nodes *nodes)
 		}
 		mtemplate_free_nodes(&n->child_nodes);
 		mtemplate_free_nodes(&n->child_nodes_else);
-		bzero(n, sizeof(n));
+		bzero(n, sizeof(*n));
 		free(n);
 	}
 }
@@ -439,7 +439,7 @@ void
 mtemplate_free(struct mtemplate *tmpl)
 {
 	mtemplate_free_nodes(&tmpl->root.child_nodes);
-	bzero(tmpl, sizeof(tmpl));
+	bzero(tmpl, sizeof(*tmpl));
 	free(tmpl);
 }
 
