@@ -794,7 +794,7 @@ miterator_free(struct miterator *iter)
 	    iter->object->type == TYPE_MARRAY &&
 	    iter->array_last_key != NULL)
 		mobject_free(iter->array_last_key);
-	bzero(iter, sizeof(iter));
+	bzero(iter, sizeof(*iter));
 	free(iter);
 }
 
