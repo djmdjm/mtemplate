@@ -300,7 +300,8 @@ mobject_to_string(const struct mobject *o, char *s, size_t len)
 	case TYPE_MSTRING:
 		return mstring_to_string((struct mstring *)o, s, len);
 	case TYPE_MINT:
-		return snprintf(s, len, "%lld", ((struct mint *)o)->value);
+		return snprintf(s, len, "%lld",
+		    (unsigned long long)((struct mint *)o)->value);
 	case TYPE_MARRAY:
 		return snprintf(s, len, "marray(%p, %llu)", o,
 		    (unsigned long long)((struct marray *)o)->nused);
