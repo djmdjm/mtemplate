@@ -102,19 +102,14 @@ struct miterator {
 };
 
 /* Single instance of mnone */
-static struct mnone *mnone_singleton = NULL;
+static struct mnone mnone_singleton = {
+	.type = TYPE_MNONE
+};
 
 struct mobject *
 mnone_new(void)
 {
-	/* Keep a single instance of mnone */
-	/* XXX: memprotect it */
-	if (mnone_singleton != NULL)
-		return (struct mobject *)mnone_singleton;
-	if ((mnone_singleton = calloc(1, sizeof(*mnone_singleton))) == NULL)
-		return NULL;
-	mnone_singleton->type = TYPE_MNONE;
-	return (struct mobject *)mnone_singleton;
+	return (struct mobject *)&mnone_singleton;
 }
 
 struct mobject *
