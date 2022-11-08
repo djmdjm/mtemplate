@@ -193,6 +193,7 @@ static void
 mnone_free(const struct mnone *o)
 {
 	/* Do nothing - mnone is a singleton */
+	(void)o;
 }
 
 static void
