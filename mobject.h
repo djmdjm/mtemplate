@@ -14,8 +14,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $Id$ */
-
 /* Simple generic object system, loosely modelled on Python's */
 
 #ifndef _MOBJECT_H

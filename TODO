@@ -96,5 +96,3 @@ shared library support
 	xobject_getiter_range(0, 1000)
 	
 	xdict_insert_scopy(d, k, obj)
-
-$Id$

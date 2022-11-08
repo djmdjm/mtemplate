@@ -3,8 +3,6 @@
  * Public domain -- Damien Miller <djm@mindrot.org> 2007-03-27
  */
 
-/* $Id$ */
-
 #ifndef _T_MACROS_H
 #define _T_MACROS_H
 
