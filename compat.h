@@ -16,8 +16,8 @@
 
 /* $Id$ */
 
-#ifndef _MTEMPLATE_COMPAT_H
-#define _MTEMPLATE_COMPAT_H
+#ifndef MTEMPLATE_COMPAT_H
+#define MTEMPLATE_COMPAT_H
 
 #include <sys/types.h>
 
@@ -47,4 +47,4 @@ size_t
 strlcat(char *dst, const char *src, size_t siz);
 #endif /* defined(__linux__) */
 
-#endif /* _MTEMPLATE_COMPAT_H */
+#endif /* MTEMPLATE_COMPAT_H */

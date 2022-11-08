@@ -32,8 +32,8 @@
  *	@(#)vis.h	5.9 (Berkeley) 4/3/91
  */
 
-#ifndef _VIS_H_
-#define	_VIS_H_
+#ifndef VIS_H
+#define	VIS_H
 
 /*
  * to select alternate encoding format
@@ -84,4 +84,4 @@ int	unvis(char *, char, int *, int);
 ssize_t strnunvis(char *, const char *, size_t)
 		/* __attribute__ ((__bounded__(__string__,1,3))) */;
 
-#endif /* !_VIS_H_ */
+#endif /* !VIS_H */

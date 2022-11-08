@@ -18,8 +18,8 @@
 
 /* Simple generic object system, loosely modelled on Python's */
 
-#ifndef _MOBJECT_H
-#define _MOBJECT_H
+#ifndef MOBJECT_H
+#define MOBJECT_H
 
 #include <sys/types.h>
 #include <stdint.h>
@@ -405,4 +405,4 @@ int mnamespace_lookup(struct mobject *ns, char *location, struct mobject **obj,
 int mnamespace_set(struct mobject *ns, char *location, struct mobject *obj,
     char *ebuf, size_t elen);
 
-#endif /* _MOBJECT_H */
+#endif /* MOBJECT_H */
