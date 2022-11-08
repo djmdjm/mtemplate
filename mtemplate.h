@@ -18,8 +18,8 @@
 
 /* Simple template system */
 
-#ifndef _MTEMPLATE_H
-#define _MTEMPLATE_H
+#ifndef MTEMPLATE_H
+#define MTEMPLATE_H
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -82,4 +82,4 @@ int
 mtemplate_run_cb(struct mtemplate *tmpl, struct mobject *ns, char *ebuf,
     size_t elen, int (*out_cb)(const char *, void *), void *out_ctx);
 
-#endif /* _MTEMPLATE_H */
+#endif /* MTEMPLATE_H */

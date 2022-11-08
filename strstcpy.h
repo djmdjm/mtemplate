@@ -19,7 +19,7 @@
 
 /* $Id: strstcpy.h,v 1.1 2007/04/02 08:55:06 djm Exp $ */
 
-#ifndef _STRSTCPY_H
+#ifndef STRSTCPY_H
 #include <sys/types.h>
 
 /*
@@ -31,4 +31,4 @@
 size_t
 strstcpy(char *dst, const char *src, size_t len, const char *stopchars);
 
-#endif /* _STRSTCPY_H */
+#endif /* STRSTCPY_H */
