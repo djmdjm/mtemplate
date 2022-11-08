@@ -101,5 +101,3 @@ vis.c, vis.h:
  *
  *	@(#)vis.h	5.9 (Berkeley) 4/3/91
  */
-
-$Id$

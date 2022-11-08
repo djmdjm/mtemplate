@@ -17,8 +17,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $Id: strstcpy.h,v 1.1 2007/04/02 08:55:06 djm Exp $ */
-
 #ifndef _STRSTCPY_H
 #include <sys/types.h>
 

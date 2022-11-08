@@ -3,8 +3,6 @@
  * Public domain -- Damien Miller <djm@mindrot.org> 2007-07-07
  */
 
-/* $Id$ */
-
 #include <sys/types.h>
 #include <sys/param.h>
 #include <stdio.h>

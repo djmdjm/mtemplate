@@ -14,8 +14,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* $Id$ */
-
 /* Simple mtemplate command line processor */
 
 #include <sys/types.h>
